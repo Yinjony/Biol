@@ -1,0 +1,69 @@
+<view wx:if="{{!isEditing}}" class="card question-card">
+  <view class="card-header">
+    <text class="question-title">{{question.content}}</text>
+    <text class="tag">{{typeName}}</text>
+  </view>
+  <view class="tag-row">
+    <text class="tag answer-tag">答案：{{question.answer}}</text>
+  </view>
+  <view class="card-options" wx:if="{{isChoice}}">
+    <view wx:for="{{question.options}}" wx:for-item="option" wx:key="label" class="option-line">
+      {{option.label}}. {{option.text}}
+    </view>
+  </view>
+  <view class="card-actions">
+    <button class="tiny-button" hover-class="button-hover" bindtap="startEdit">修改</button>
+    <button class="tiny-button danger-text" hover-class="button-hover" bindtap="removeQuestion">删除</button>
+  </view>
+</view>
+
+<view wx:else class="card question-card question-editor-card">
+  <view class="card-header">
+    <text class="editor-title">编辑题目</text>
+    <text class="tag">{{typeName}}</text>
+  </view>
+
+  <view class="field">
+    <textarea
+      class="textarea editor-question-input"
+      maxlength="-1"
+      auto-height
+      adjust-position="false"
+      value="{{draft.content}}"
+      bindinput="onContentInput"
+    />
+  </view>
+
+  <view class="field editor-answer-field {{isAnswerMenuOpen ? 'menu-open' : ''}}">
+    <button class="editor-answer-button" hover-class="button-hover" bindtap="toggleAnswerMenu">答案：{{draft.answer}}</button>
+    <view class="editor-answer-menu" wx:if="{{isAnswerMenuOpen}}">
+      <button
+        wx:for="{{answerChoices}}"
+        wx:key="*this"
+        class="editor-answer-option {{item === draft.answer ? 'selected' : ''}}"
+        hover-class="button-hover"
+        data-index="{{index}}"
+        catchtap="selectAnswer"
+      >{{item}}</button>
+    </view>
+  </view>
+
+  <view class="editor-options" wx:if="{{isChoice}}">
+    <view class="editor-option" wx:for="{{draft.options}}" wx:for-item="option" wx:key="label">
+      <text class="editor-option-label">{{option.label}}.</text>
+      <input
+        class="text-input editor-option-input"
+        type="text"
+        value="{{option.text}}"
+        data-index="{{index}}"
+        bindinput="onOptionInput"
+      />
+    </view>
+  </view>
+
+  <view class="card-actions editor-actions">
+    <button class="tiny-button" hover-class="button-hover" bindtap="cancelEdit">取消</button>
+    <button class="tiny-button danger-text" hover-class="button-hover" bindtap="removeQuestion">删除</button>
+    <button class="primary-button editor-save-button" hover-class="button-hover" bindtap="saveEdit">保存</button>
+  </view>
+</view>

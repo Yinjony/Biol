@@ -1,0 +1,58 @@
+<view class="page-shell">
+  <view class="hero-panel">
+    <view class="hero-brand">
+      <image class="hero-logo" src="/image/logo.png" mode="aspectFill" />
+      <view class="hero-copy">
+        <text class="hero-title">题库管理</text>
+        <text class="hero-meta">{{resultCountText}}</text>
+      </view>
+    </view>
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value">{{stats.total}}</text>
+        <text class="stat-label">题目</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.choice}}</text>
+        <text class="stat-label">选择</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.judge}}</text>
+        <text class="stat-label">判断</text>
+      </view>
+    </view>
+  </view>
+  <view class="section card search-card">
+    <input
+      class="text-input"
+      type="text"
+      confirm-type="search"
+      placeholder="输入题干关键词"
+      value="{{searchQuery}}"
+      bindinput="onSearchInput"
+    />
+  </view>
+
+  <view class="question-list" wx:if="{{hasDisplayQuestions}}">
+    <question-card
+      wx:for="{{displayQuestions}}"
+      wx:for-item="question"
+      wx:key="id"
+      question="{{question}}"
+      bind:save="saveQuestionCard"
+      bind:remove="confirmDeleteQuestion"
+    />
+  </view>
+
+  <view class="section empty-state" wx:else>没有匹配的题目</view>
+
+  <view class="pager-row" wx:if="{{hasMatchedQuestions}}">
+    <button class="pager-button" disabled="{{!canPrevPage}}" hover-class="button-hover" bindtap="prevPage">上一页</button>
+    <text class="pager-text">{{pagerText}}</text>
+    <button class="pager-button" disabled="{{!canNextPage}}" hover-class="button-hover" bindtap="nextPage">下一页</button>
+  </view>
+
+  <view class="backtop-button" hover-class="button-hover" bindtap="scrollToTop" aria-label="回到顶部" role="button">
+  <view class="backtop-arrow"></view>
+</view>
+</view>

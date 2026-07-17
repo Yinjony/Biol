@@ -1,0 +1,69 @@
+<view class="page-shell">
+  <view class="hero-panel">
+    <view class="hero-brand">
+      <image class="hero-logo" src="/image/logo.png" mode="aspectFill" />
+      <view class="hero-copy">
+        <text class="hero-title">随机练习</text>
+        <text class="hero-meta">{{quizStatus}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section card">
+    <view class="quiz-control-row">
+      <text class="quiz-count-label">抽题数</text>
+      <view class="dropdown-field quiz-count-field">
+        <button class="dropdown-trigger quiz-count-button" hover-class="button-hover" bindtap="toggleQuizCountMenu">{{quizCount}}</button>
+        <view class="dropdown-menu" wx:if="{{isQuizCountMenuOpen}}">
+          <button
+            wx:for="{{quizCountOptions}}"
+            wx:key="*this"
+            class="dropdown-option {{item === quizCount ? 'selected' : ''}}"
+            hover-class="button-hover"
+            data-index="{{index}}"
+            catchtap="selectQuizCount"
+          >{{item}}</button>
+        </view>
+      </view>
+      <button class="primary-button" hover-class="button-hover" bindtap="startQuiz">随机开始</button>
+    </view>
+  </view>
+
+  <view class="section empty-state" wx:if="{{!hasQuizItems}}">点击随机开始</view>
+
+  <view class="quiz-board" wx:else>
+    <view class="card quiz-card" wx:for="{{quizItems}}" wx:for-item="question" wx:key="id">
+      <view class="quiz-header">
+        <view class="quiz-title-row">
+          <text class="quiz-index">{{question.displayIndex}}</text>
+          <text class="question-title">{{question.content}}</text>
+        </view>
+        <text class="tag">{{question.typeName}}</text>
+      </view>
+
+      <view class="answer-buttons">
+        <button
+          wx:for="{{question.answerOptions}}"
+          wx:for-item="option"
+          wx:key="label"
+          class="answer-option {{option.className}}"
+          disabled="{{question.answered}}"
+          hover-class="answer-hover"
+          data-id="{{question.id}}"
+          data-answer="{{option.label}}"
+          bindtap="answerQuestion"
+        >
+          {{option.displayText}}
+        </button>
+      </view>
+
+      <view class="feedback {{question.feedbackClass}}" wx:if="{{question.answered}}">
+        {{question.feedbackText}}
+      </view>
+    </view>
+  </view>
+
+  <view class="section submit-section" wx:if="{{hasQuizItems}}">
+    <button class="primary-button submit-button" hover-class="button-hover" bindtap="submitQuiz">提交</button>
+  </view>
+</view>

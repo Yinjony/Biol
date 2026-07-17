@@ -1,0 +1,103 @@
+<view class="page-shell">
+  <view class="hero-panel">
+    <view class="hero-brand">
+      <image class="hero-logo" src="/image/logo.png" mode="aspectFill" />
+      <view class="hero-copy">
+        <text class="hero-title">{{formTitle}}</text>
+        <text class="hero-meta">{{formMeta}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section mode-row">
+    <button class="mode-button {{isManualMode ? 'active' : ''}}" hover-class="button-hover" data-mode="manual" bindtap="setMode">手动填写</button>
+    <button class="mode-button {{isImportMode ? 'active' : ''}}" hover-class="button-hover" data-mode="import" bindtap="setMode">导入文件</button>
+  </view>
+
+  <view wx:if="{{isImportMode}}" class="section card import-card">
+    <button class="secondary-button import-button" hover-class="button-hover" bindtap="chooseImportFile" loading="{{importBusy}}">导入 Word 文件</button>
+    <text class="import-hint">支持 .docx 和 .doc，按题号、答案和选项顺序读取。</text>
+    <text class="import-status" wx:if="{{importStatus}}">{{importStatus}}</text>
+  </view>
+
+  <view wx:if="{{isImportMode && hasImportQuestions}}" class="question-list import-question-list">
+    <question-card
+      wx:for="{{importQuestions}}"
+      wx:for-item="question"
+      wx:key="id"
+      question="{{question}}"
+      bind:save="saveImportedQuestion"
+      bind:remove="confirmRemoveImportedQuestion"
+    />
+  </view>
+
+  <view wx:if="{{isImportMode && hasImportQuestions}}" class="section import-save-section">
+    <button class="primary-button import-save-button" hover-class="button-hover" loading="{{savingImportedQuestions}}" bindtap="saveImportedQuestions">保存全部（{{importQuestionCount}}）</button>
+  </view>
+
+  <view wx:if="{{isImportMode && !hasImportQuestions}}" class="section empty-state">导入后将在这里预览题目</view>
+
+  <view wx:if="{{isManualMode}}" class="section card">
+    <view class="field-row manual-select-row {{isQuestionTypeMenuOpen || isAnswerMenuOpen ? 'menu-open' : ''}}">
+      <view class="field dropdown-field">
+        <text class="field-label">题型</text>
+        <button class="dropdown-trigger" hover-class="button-hover" bindtap="toggleQuestionTypeMenu">{{questionTypeName}}</button>
+        <view class="dropdown-menu" wx:if="{{isQuestionTypeMenuOpen}}">
+          <button
+            wx:for="{{questionTypeOptions}}"
+            wx:key="value"
+            class="dropdown-option {{item.value === questionType ? 'selected' : ''}}"
+            hover-class="button-hover"
+            data-index="{{index}}"
+            catchtap="selectQuestionType"
+          >{{item.name}}</button>
+        </view>
+      </view>
+
+      <view class="field dropdown-field">
+        <text class="field-label">答案</text>
+        <button class="dropdown-trigger" hover-class="button-hover" bindtap="toggleAnswerMenu">{{answerInput}}</button>
+        <view class="dropdown-menu" wx:if="{{isAnswerMenuOpen}}">
+          <button
+            wx:for="{{answerChoices}}"
+            wx:key="*this"
+            class="dropdown-option {{item === answerInput ? 'selected' : ''}}"
+            hover-class="button-hover"
+            data-index="{{index}}"
+            catchtap="selectAnswer"
+          >{{item}}</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="field question-content-field">
+      <text class="field-label">题干</text>
+      <textarea
+        class="textarea"
+        maxlength="-1"
+        placeholder="请输入题干"
+        value="{{contentInput}}"
+        bindinput="onContentInput"
+      />
+    </view>
+
+    <view wx:if="{{isChoiceType}}" class="option-fields">
+      <view class="field" wx:for="{{optionFields}}" wx:for-item="option" wx:key="label">
+        <text class="field-label">{{option.label}}</text>
+        <input
+          class="text-input"
+          type="text"
+          placeholder="选项 {{option.label}}"
+          value="{{option.value}}"
+          data-label="{{option.label}}"
+          bindinput="onOptionInput"
+        />
+      </view>
+    </view>
+
+    <view class="form-actions">
+      <button class="secondary-button" hover-class="button-hover" bindtap="resetForm">清空</button>
+      <button class="primary-button" hover-class="button-hover" bindtap="saveQuestion">保存题目</button>
+    </view>
+  </view>
+</view>

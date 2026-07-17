@@ -1,0 +1,132 @@
+@import "../../pages/common/bio.wxss";
+
+.question-editor-card {
+  position: relative;
+}
+
+.editor-title {
+  color: #1f2a24;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.editor-question-input,
+.editor-option-input {
+  box-sizing: border-box;
+}
+
+.editor-question-input {
+  min-height: 78rpx;
+}
+
+.editor-answer-field {
+  position: relative;
+  z-index: 1;
+}
+
+.editor-answer-field.menu-open {
+  z-index: 30;
+}
+
+.editor-answer-button {
+  position: relative;
+  width: 100%;
+  min-height: 78rpx;
+  margin: 0;
+  padding: 0 64rpx 0 22rpx;
+  border: 1rpx solid #cfeadb;
+  border-radius: 16rpx;
+  background: #edf8f1;
+  color: #14663f;
+  font-size: 28rpx;
+  line-height: 78rpx;
+  text-align: left;
+}
+
+.editor-answer-button::before {
+  position: absolute;
+  top: 50%;
+  right: 24rpx;
+  width: 0;
+  height: 0;
+  margin-top: -4rpx;
+  border-top: 10rpx solid #68746d;
+  border-right: 8rpx solid transparent;
+  border-left: 8rpx solid transparent;
+  content: '';
+}
+
+.editor-answer-button::after,
+.editor-answer-option::after {
+  border: 0;
+}
+
+.editor-answer-menu {
+  position: absolute;
+  top: calc(100% + 8rpx);
+  right: 0;
+  left: 0;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  padding: 10rpx;
+  border: 1rpx solid #dce5df;
+  border-radius: 14rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 28rpx rgba(31, 42, 36, 0.16);
+}
+
+.editor-answer-option {
+  width: 100%;
+  min-height: 64rpx;
+  margin: 0;
+  padding: 0 18rpx;
+  border: 1rpx solid #dce5df;
+  border-radius: 12rpx;
+  background: #ffffff;
+  color: #45534b;
+  font-size: 26rpx;
+  line-height: 64rpx;
+  text-align: left;
+}
+
+.editor-answer-option.selected {
+  border-color: #1f8a5b;
+  background: #e8f5ee;
+  color: #14663f;
+}
+
+.editor-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.editor-option {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.editor-option-label {
+  flex: 0 0 44rpx;
+  color: #45534b;
+  font-size: 28rpx;
+}
+
+.editor-option-input {
+  flex: 1;
+  width: auto;
+}
+
+.editor-actions {
+  align-items: stretch;
+}
+
+.editor-save-button {
+  min-height: 62rpx;
+  padding: 0 28rpx;
+  font-size: 24rpx;
+}

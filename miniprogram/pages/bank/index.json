@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "题库管理",
+  "usingComponents": {
+    "question-card": "/components/question-card/index"
+  }
+}

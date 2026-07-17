@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物做题小程序</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <span class="brand-mark">Bio</span>
+        <div>
+          <h1>生物做题</h1>
+          <p>V0.1</p>
+        </div>
+      </div>
+      <nav class="nav-tabs" aria-label="功能切换">
+        <button class="nav-tab active" type="button" data-view="bank">题库</button>
+        <button class="nav-tab" type="button" data-view="quiz">练习</button>
+        <button class="nav-tab" type="button" data-view="import">导入</button>
+      </nav>
+      <div class="summary-strip">
+        <div>
+          <span id="statTotal">0</span>
+          <small>题目</small>
+        </div>
+        <div>
+          <span id="statChoice">0</span>
+          <small>选择</small>
+        </div>
+        <div>
+          <span id="statJudge">0</span>
+          <small>判断</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="view active" id="view-bank">
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <h2>题库管理</h2>
+            <span id="resultCount">0 条</span>
+          </div>
+          <div class="toolbar-actions">
+            <label class="search-box">
+              <span>搜索</span>
+              <input id="searchInput" type="search" placeholder="输入题干关键词">
+            </label>
+            <button class="primary-button" type="button" id="newQuestionBtn">新增题目</button>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <section class="editor-panel" aria-label="题目编辑">
+            <form id="questionForm" autocomplete="off">
+              <input id="editingId" type="hidden">
+              <div class="field-row">
+                <label class="field">
+                  <span>题型</span>
+                  <select id="questionType">
+                    <option value="CHOICE">选择题</option>
+                    <option value="JUDGE">判断题</option>
+                  </select>
+                </label>
+                <label class="field compact-field">
+                  <span>答案</span>
+                  <input id="answerInput" type="text" maxlength="10" placeholder="A / 对">
+                </label>
+              </div>
+
+              <label class="field">
+                <span>题干</span>
+                <textarea id="contentInput" rows="5" placeholder="请输入题干"></textarea>
+              </label>
+
+              <div id="optionFields" class="option-fields" aria-label="选择题选项">
+                <label class="field">
+                  <span>A</span>
+                  <input class="option-input" data-option="A" type="text" placeholder="选项 A">
+                </label>
+                <label class="field">
+                  <span>B</span>
+                  <input class="option-input" data-option="B" type="text" placeholder="选项 B">
+                </label>
+                <label class="field">
+                  <span>C</span>
+                  <input class="option-input" data-option="C" type="text" placeholder="选项 C">
+                </label>
+                <label class="field">
+                  <span>D</span>
+                  <input class="option-input" data-option="D" type="text" placeholder="选项 D">
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button class="secondary-button" type="button" id="resetFormBtn">清空</button>
+                <button class="primary-button" type="submit" id="saveQuestionBtn">保存题目</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="question-list" id="questionList" aria-label="题目列表"></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-quiz">
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <h2>开始做题</h2>
+            <span id="quizStatus">未开始</span>
+          </div>
+          <div class="toolbar-actions quiz-actions">
+            <label class="field inline-field">
+              <span>抽题数</span>
+              <select id="quizCount">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+            <button class="primary-button" type="button" id="startQuizBtn">随机开始</button>
+            <button class="secondary-button" type="button" id="submitQuizBtn">提交</button>
+          </div>
+        </div>
+        <section class="quiz-board" id="quizBoard" aria-label="练习题目"></section>
+      </section>
+
+      <section class="view" id="view-import">
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <h2>上传题目</h2>
+            <span>OCR / 文档文本</span>
+          </div>
+          <div class="toolbar-actions">
+            <label class="file-button">
+              读取文本文件
+              <input id="fileInput" type="file" accept=".txt,.md,.text">
+            </label>
+            <button class="secondary-button" type="button" id="parseTextBtn">智能填入</button>
+          </div>
+        </div>
+
+        <div class="import-layout">
+          <label class="field import-text">
+            <span>识别内容</span>
+            <textarea id="rawImportText" rows="14" placeholder="粘贴 OCR 或 Word 提取出的文本"></textarea>
+          </label>
+          <section class="parse-panel" aria-label="识别结果">
+            <h3>识别结果</h3>
+            <dl>
+              <div>
+                <dt>题型</dt>
+                <dd id="parsedType">-</dd>
+              </div>
+              <div>
+                <dt>题干</dt>
+                <dd id="parsedContent">-</dd>
+              </div>
+              <div>
+                <dt>选项</dt>
+                <dd id="parsedOptions">-</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">提示</h3>
+      <p id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
