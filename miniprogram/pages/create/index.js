@@ -18,6 +18,7 @@ Page({
     importQuestions: [],
     hasImportQuestions: false,
     importQuestionCount: 0,
+    editingImportedQuestionId: '',
   },
 
   onShow() {
@@ -132,6 +133,7 @@ Page({
             importQuestions,
             hasImportQuestions: importQuestions.length > 0,
             importQuestionCount: importQuestions.length,
+            editingImportedQuestionId: '',
             importStatus: importQuestions.length
               ? `已读取 ${importQuestions.length} 道题，尚未保存。`
               : '未读取到可保存的题目。',
@@ -165,6 +167,23 @@ Page({
     showToast('已更新暂存题目')
   },
 
+  startImportedQuestionEdit(event) {
+    const id = event.detail && event.detail.id
+    if (!id) return
+    if (this.data.editingImportedQuestionId && this.data.editingImportedQuestionId !== id) {
+      showToast('请先完成当前题目的修改')
+      return
+    }
+    this.setData({ editingImportedQuestionId: id })
+  },
+
+  endImportedQuestionEdit(event) {
+    const id = event.detail && event.detail.id
+    if (id && this.data.editingImportedQuestionId === id) {
+      this.setData({ editingImportedQuestionId: '' })
+    }
+  },
+
   confirmRemoveImportedQuestion(event) {
     const id = event.detail && event.detail.id
     const question = this.data.importQuestions.find((item) => item.id === id)
@@ -182,6 +201,7 @@ Page({
           importQuestions,
           hasImportQuestions: importQuestions.length > 0,
           importQuestionCount: importQuestions.length,
+          editingImportedQuestionId: this.data.editingImportedQuestionId === id ? '' : this.data.editingImportedQuestionId,
           importStatus: importQuestions.length ? `已保留 ${importQuestions.length} 道暂存题。` : '没有待保存的题目。',
         })
       },
@@ -209,6 +229,7 @@ Page({
         importQuestions: [],
         hasImportQuestions: false,
         importQuestionCount: 0,
+        editingImportedQuestionId: '',
         importStatus: '',
       })
       showToast(savedToDatabase === results.length ? '已保存全部题目' : '已保存到本地缓存')

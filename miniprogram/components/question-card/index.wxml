@@ -12,7 +12,7 @@
     </view>
   </view>
   <view class="card-actions">
-    <button class="tiny-button" hover-class="button-hover" bindtap="startEdit">修改</button>
+    <button class="tiny-button" hover-class="button-hover" bindtap="requestEdit">修改</button>
     <button class="tiny-button danger-text" hover-class="button-hover" bindtap="removeQuestion">删除</button>
   </view>
 </view>
@@ -25,7 +25,7 @@
 
   <view class="field">
     <textarea
-      class="textarea editor-question-input"
+      class="editor-question-input"
       maxlength="-1"
       auto-height
       adjust-position="false"

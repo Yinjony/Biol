@@ -39,6 +39,9 @@
       wx:for-item="question"
       wx:key="id"
       question="{{question}}"
+      editing-id="{{editingQuestionId}}"
+      bind:editstart="startQuestionCardEdit"
+      bind:editend="endQuestionCardEdit"
       bind:save="saveQuestionCard"
       bind:remove="confirmDeleteQuestion"
     />
@@ -47,9 +50,15 @@
   <view class="section empty-state" wx:else>没有匹配的题目</view>
 
   <view class="pager-row" wx:if="{{hasMatchedQuestions}}">
-    <button class="pager-button" disabled="{{!canPrevPage}}" hover-class="button-hover" bindtap="prevPage">上一页</button>
+    <button class="pager-button pager-prev" disabled="{{!canPrevPage}}" hover-class="button-hover" bindtap="prevPage">
+      <view class="pager-chevron pager-chevron-left"></view>
+      <text>上一页</text>
+    </button>
     <text class="pager-text">{{pagerText}}</text>
-    <button class="pager-button" disabled="{{!canNextPage}}" hover-class="button-hover" bindtap="nextPage">下一页</button>
+    <button class="pager-button pager-next" disabled="{{!canNextPage}}" hover-class="button-hover" bindtap="nextPage">
+      <text>下一页</text>
+      <view class="pager-chevron pager-chevron-right"></view>
+    </button>
   </view>
 
   <view class="backtop-button" hover-class="button-hover" bindtap="scrollToTop" aria-label="回到顶部" role="button">

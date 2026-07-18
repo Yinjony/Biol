@@ -18,20 +18,20 @@
     "list": [
       {
         "pagePath": "pages/bank/index",
-        "iconPath": "image/record.png",
-        "selectedIconPath": "image/record.png",
+        "iconPath": "image/tab-bank.png",
+        "selectedIconPath": "image/tab-bank-active.png",
         "text": "题库管理"
       },
       {
         "pagePath": "pages/quiz/index",
-        "iconPath": "image/play.png",
-        "selectedIconPath": "image/play.png",
+        "iconPath": "image/tab-quiz.png",
+        "selectedIconPath": "image/tab-quiz-active.png",
         "text": "随机练习"
       },
       {
         "pagePath": "pages/create/index",
-        "iconPath": "image/plus.png",
-        "selectedIconPath": "image/plus_dark.png",
+        "iconPath": "image/tab-create.png",
+        "selectedIconPath": "image/tab-create-active.png",
         "text": "新增题目"
       }
     ]

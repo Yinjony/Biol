@@ -6,6 +6,10 @@ Component({
       type: Object,
       value: {},
     },
+    editingId: {
+      type: String,
+      value: '',
+    },
   },
 
   data: {
@@ -29,22 +33,20 @@ Component({
 
   observers: {
     question(question) {
-      if (!this.data.isEditing) {
-        this.setData(makeEditorState(question))
-      }
+      syncEditingState(this, question)
+    },
+    editingId() {
+      syncEditingState(this, this.properties.question)
     },
   },
 
   methods: {
-    startEdit() {
-      this.setData({
-        isEditing: true,
-        isAnswerMenuOpen: false,
-        ...makeEditorState(this.properties.question),
-      })
+    requestEdit() {
+      this.triggerEvent('editstart', { id: this.properties.question.id })
     },
 
     cancelEdit() {
+      this.triggerEvent('editend', { id: this.properties.question.id })
       this.setData({
         isEditing: false,
         isAnswerMenuOpen: false,
@@ -94,6 +96,7 @@ Component({
         return
       }
 
+      this.triggerEvent('editend', { id: this.properties.question.id })
       this.triggerEvent('save', {
         id: this.properties.question.id,
         payload: validation.value,
@@ -105,10 +108,39 @@ Component({
     },
 
     removeQuestion() {
+      if (this.data.isEditing) {
+        this.triggerEvent('editend', { id: this.properties.question.id })
+      }
       this.triggerEvent('remove', { id: this.properties.question.id })
     },
   },
 })
+
+function syncEditingState(component, question) {
+  const shouldEdit = Boolean(question && question.id && component.properties.editingId === question.id)
+
+  if (shouldEdit && !component.data.isEditing) {
+    component.setData({
+      isEditing: true,
+      isAnswerMenuOpen: false,
+      ...makeEditorState(question),
+    })
+    return
+  }
+
+  if (!shouldEdit && component.data.isEditing) {
+    component.setData({
+      isEditing: false,
+      isAnswerMenuOpen: false,
+      ...makeEditorState(question),
+    })
+    return
+  }
+
+  if (!component.data.isEditing) {
+    component.setData(makeEditorState(question))
+  }
+}
 
 function makeEditorState(question) {
   const type = question && question.type === 'JUDGE' ? 'JUDGE' : 'CHOICE'

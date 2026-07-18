@@ -20,6 +20,7 @@ Page({
     pageCount: 1,
     canPrevPage: false,
     canNextPage: false,
+    editingQuestionId: '',
   },
 
   onShow() {
@@ -65,6 +66,23 @@ Page({
     showToast(result.source === 'database' ? '题目已保存' : '数据库未连接，已保存本地缓存')
   },
 
+  startQuestionCardEdit(event) {
+    const id = event.detail && event.detail.id
+    if (!id) return
+    if (this.data.editingQuestionId && this.data.editingQuestionId !== id) {
+      showToast('请先完成当前题目的修改')
+      return
+    }
+    this.setData({ editingQuestionId: id })
+  },
+
+  endQuestionCardEdit(event) {
+    const id = event.detail && event.detail.id
+    if (id && this.data.editingQuestionId === id) {
+      this.setData({ editingQuestionId: '' })
+    }
+  },
+
   confirmDeleteQuestion(event) {
     const id = event.detail && event.detail.id
     const question = this.data.displayQuestions.find((item) => item.id === id)
@@ -79,7 +97,8 @@ Page({
         if (!res.confirm) return
 
         bio.deleteQuestion(id).then((result) => {
-          this.reloadQuestions()
+          const editingQuestionId = this.data.editingQuestionId === id ? '' : this.data.editingQuestionId
+          this.setData({ editingQuestionId }, () => this.reloadQuestions())
           showToast(result.source === 'database' ? '题目已删除' : '数据库未连接，已删除本地缓存')
         })
       },

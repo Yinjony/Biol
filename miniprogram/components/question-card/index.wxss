@@ -16,12 +16,24 @@
 }
 
 .editor-question-input {
+  width: 100%;
   min-height: 78rpx;
+  max-height: 300rpx; /* 增加最大高度限制 */
+  overflow-y: auto;   /* 超出部分滚动 */
+  padding: 20rpx 22rpx;
+  border: 1rpx solid #dce5df;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #1f2a24;
+  font-size: 28rpx;
+  line-height: 1.55;
 }
 
 .editor-answer-field {
   position: relative;
   z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .editor-answer-field.menu-open {
@@ -30,10 +42,12 @@
 
 .editor-answer-button {
   position: relative;
-  width: 100%;
+  width: 100% !important;       /* 强制 100% */
+  margin: 0 !important;         /* 【核心】清除 button 默认的左右 margin，解决居中和间距问题 */
+  padding: 0 64rpx 0 22rpx !important; /* 清除默认 padding，保留你需要的 */
+  box-sizing: border-box;
   min-height: 78rpx;
-  margin: 0;
-  padding: 0 64rpx 0 22rpx;
+  
   border: 1rpx solid #cfeadb;
   border-radius: 16rpx;
   background: #edf8f1;
@@ -56,9 +70,10 @@
   content: '';
 }
 
+/* 彻底清除 button 默认的 ::after 边框 */
 .editor-answer-button::after,
 .editor-answer-option::after {
-  border: 0;
+  display: none !important; /* 用 display: none 比 border: 0 更彻底 */
 }
 
 .editor-answer-menu {
@@ -66,6 +81,8 @@
   top: calc(100% + 8rpx);
   right: 0;
   left: 0;
+  width: 100%;
+  box-sizing: border-box;
   z-index: 31;
   display: flex;
   flex-direction: column;
@@ -78,10 +95,12 @@
 }
 
 .editor-answer-option {
-  width: 100%;
+  width: 100% !important;
+  margin: 0 !important;         /* 【核心】清除选项 button 的默认 margin */
+  padding: 0 18rpx !important;  /* 清除默认 padding */
+  box-sizing: border-box;
   min-height: 64rpx;
-  margin: 0;
-  padding: 0 18rpx;
+  
   border: 1rpx solid #dce5df;
   border-radius: 12rpx;
   background: #ffffff;
@@ -97,6 +116,7 @@
   color: #14663f;
 }
 
+/* 选项部分样式保持不变 */
 .editor-options {
   display: flex;
   flex-direction: column;
