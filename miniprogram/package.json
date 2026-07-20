@@ -9,5 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "@cloudbase/js-sdk": "^3.6.3"
+  }
 }

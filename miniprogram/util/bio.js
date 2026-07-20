@@ -1,4 +1,6 @@
 const api = require('./api')
+const config = require('../config')
+const questionRdb = require('./question-rdb')
 
 const STORAGE_KEY = 'bio-question-bank-v1'
 const PENDING_EDIT_KEY = 'bio-pending-edit-id'
@@ -103,10 +105,13 @@ function persistQuestions(questions) {
 }
 
 async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.fetchQuestionPage({ search, page, pageSize }))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     const result = await api.get('/api/questions', { search, page, pageSize })
     return {
-      source: 'database',
+      source: 'http-api',
       questions: result.data || [],
       total: result.total || 0,
       page: result.page || page,
@@ -115,48 +120,57 @@ async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
       stats: result.stats || getStats([]),
     }
   } catch (error) {
-    return localQuestionPage({ search, page, pageSize, error })
+    return localQuestionPage({ search, page, pageSize, error: rdbResult.error || error })
   }
 }
 
 async function fetchRandomQuestions(count) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.fetchRandomQuestions(count))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     const result = await api.get('/api/questions/random', { count })
     return {
-      source: 'database',
+      source: 'http-api',
       questions: result.data || [],
     }
   } catch (error) {
     const questions = loadQuestions()
     return {
       source: 'local',
-      error,
+      error: rdbResult.error || error,
       questions: shuffle([...questions]).slice(0, count),
     }
   }
 }
 
 async function getQuestionById(id) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.getQuestionById(id))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     const result = await api.get(`/api/questions/${encodeURIComponent(id)}`)
     return {
-      source: 'database',
+      source: 'http-api',
       question: result.data || null,
     }
   } catch (error) {
     return {
       source: 'local',
-      error,
+      error: rdbResult.error || error,
       question: loadQuestions().find((question) => question.id === id) || null,
     }
   }
 }
 
 async function createQuestion(payload) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.createQuestion(payload))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     const result = await api.post('/api/questions', payload)
     return {
-      source: 'database',
+      source: 'http-api',
       question: result.data,
     }
   } catch (error) {
@@ -169,15 +183,18 @@ async function createQuestion(payload) {
     }
     const questions = [question, ...loadQuestions()]
     persistQuestions(questions)
-    return { source: 'local', error, question }
+    return { source: 'local', error: rdbResult.error || error, question }
   }
 }
 
 async function updateQuestion(id, payload) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.updateQuestion(id, payload))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     const result = await api.put(`/api/questions/${encodeURIComponent(id)}`, payload)
     return {
-      source: 'database',
+      source: 'http-api',
       question: result.data,
     }
   } catch (error) {
@@ -192,17 +209,33 @@ async function updateQuestion(id, payload) {
     })
     const question = questions.find((item) => item.id === id) || null
     persistQuestions(questions)
-    return { source: 'local', error, question }
+    return { source: 'local', error: rdbResult.error || error, question }
   }
 }
 
 async function deleteQuestion(id) {
+  const rdbResult = await tryCloudRdb(() => questionRdb.deleteQuestion(id))
+  if (rdbResult.ok) return rdbResult.value
+
   try {
     await api.del(`/api/questions/${encodeURIComponent(id)}`)
-    return { source: 'database' }
+    return { source: 'http-api' }
   } catch (error) {
     persistQuestions(loadQuestions().filter((question) => question.id !== id))
-    return { source: 'local', error }
+    return { source: 'local', error: rdbResult.error || error }
+  }
+}
+
+async function tryCloudRdb(action) {
+  if (config.questionDataSource !== 'cloud-rdb') {
+    return { ok: false, error: null }
+  }
+
+  try {
+    return { ok: true, value: await action() }
+  } catch (error) {
+    console.warn('Cloud RDB request failed; falling back to the original HTTP API.', error)
+    return { ok: false, error }
   }
 }
 

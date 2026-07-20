@@ -15,6 +15,10 @@ const config = {
   envId: 'cloud1-d4g11jwpy015d4066',
   // envId: 'test-f0b102',
 
+  // Question data source: use CloudBase RDB first and retain the original HTTP API as fallback.
+  questionDataSource: 'cloud-rdb',
+  rdbQuestionTable: 'question',
+
   // 云开发-存储 示例文件的文件 ID
   demoImageFileId: 'cloud://release-b86096.7265-release-b86096-1258211818/demo.jpg',
   demoVideoFileId: 'cloud://release-b86096.7265-release-b86096/demo.mp4',
