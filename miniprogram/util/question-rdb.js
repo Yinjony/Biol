@@ -1,142 +1,112 @@
 const config = require('../config')
 
-let cloudbaseApp
-
-function getCloudbaseApp() {
-  if (cloudbaseApp) return cloudbaseApp
-
-  // Keep this optional dependency lazy: a missing/stale miniprogram_npm build
-  // must not prevent the question bank from falling back to the HTTP API.
-  const cloudbase = require('@cloudbase/js-sdk')
-  // RDB is an optional CloudBase SDK module and must be registered before init().
-  require('@cloudbase/js-sdk/mysql')
-  cloudbaseApp = cloudbase.init({ env: config.envId })
-  return cloudbaseApp
-}
-
 function getQuestionTable() {
-  if (!wx.cloud) {
-    throw new Error('wx.cloud is unavailable. Cloud RDB requires a Cloud Development environment.')
+  const cloudbase = getApp().globalData.cloudbase
+  if (!cloudbase || typeof cloudbase.rdb !== 'function') {
+    throw new Error('CloudBase RDB is unavailable. Check app.js initialization first.')
   }
 
-  const rdb = getCloudbaseApp().rdb()
-  if (!rdb || typeof rdb.from !== 'function') {
-    throw new Error('Cloud RDB is unavailable. Build the npm package in WeChat DevTools first.')
-  }
-
-  return rdb.from(config.rdbQuestionTable)
+  return cloudbase.rdb().from(config.rdbQuestionTable)
 }
 
 async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
-  const offset = (page - 1) * pageSize
-  let query = getQuestionTable()
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
+  const questions = await fetchAllQuestions()
+  const matchedQuestions = questions
+    .filter((question) => containsText(question.content, search))
+    .sort(sortByNewest)
+  const total = matchedQuestions.length
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const pageIndex = Math.min(Math.max(page, 1), pageCount)
+  const offset = (pageIndex - 1) * pageSize
 
-  if (search) {
-    query = query.ilike('content', `%${escapeLike(search)}%`)
-  }
-
-  const [pageResult, stats] = await Promise.all([
-    query.range(offset, offset + pageSize - 1),
-    fetchStats(),
-  ])
-  assertSuccess(pageResult, 'query question table')
-
-  const total = Number(pageResult.count || 0)
   return {
-    source: 'cloud-rdb',
-    questions: (pageResult.data || []).map(mapQuestion),
+    source: 'database',
+    questions: matchedQuestions.slice(offset, offset + pageSize),
     total,
-    page,
+    page: pageIndex,
     pageSize,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
-    stats,
+    pageCount,
+    stats: getStats(questions),
   }
 }
 
 async function fetchRandomQuestions(count) {
-  const result = await getQuestionTable().select('*')
-  assertSuccess(result, 'query question table')
-
+  const questions = await fetchAllQuestions()
   return {
-    source: 'cloud-rdb',
-    questions: shuffle((result.data || []).map(mapQuestion)).slice(0, count),
+    source: 'database',
+    questions: shuffle(questions).slice(0, count),
   }
 }
 
 async function getQuestionById(id) {
-  const result = await getQuestionTable()
+  // Query records by id using the CloudBase RDB API.
+  const { data, error } = await getQuestionTable()
     .select('*')
     .eq('id', id)
-    .maybeSingle()
-  assertSuccess(result, 'query question by id')
+  assertSuccess(error, 'query question by id')
 
+  const rows = Array.isArray(data) ? data : []
   return {
-    source: 'cloud-rdb',
-    question: result.data ? mapQuestion(result.data) : null,
+    source: 'database',
+    question: rows[0] ? mapQuestion(rows[0]) : null,
   }
 }
 
 async function createQuestion(payload) {
-  const result = await getQuestionTable()
-    .insert(toRdbRecord(payload))
-    .select('*')
-    .single()
-  assertSuccess(result, 'insert question')
+  // Insert a new question using the CloudBase RDB API.
+  const { data, error } = await getQuestionTable().insert(toRdbRecord(payload))
+  assertSuccess(error, 'insert question')
 
   return {
-    source: 'cloud-rdb',
-    question: mapQuestion(result.data),
+    source: 'database',
+    question: mapFirstQuestion(data, payload),
   }
 }
 
 async function updateQuestion(id, payload) {
-  const result = await getQuestionTable()
-    .update({
-      ...toRdbRecord(payload),
-      updated_at: new Date().toISOString(),
-    })
+  // Update the matching question using update(...).eq('id', id).
+  const { data, error } = await getQuestionTable()
+    .update(toRdbRecord(payload))
     .eq('id', id)
-    .select('*')
-    .maybeSingle()
-  assertSuccess(result, 'update question')
-
-  if (!result.data) {
-    throw new Error(`Question ${id} does not exist in Cloud RDB.`)
-  }
+  assertSuccess(error, 'update question')
 
   return {
-    source: 'cloud-rdb',
-    question: mapQuestion(result.data),
+    source: 'database',
+    question: mapFirstQuestion(data, { id, ...payload }),
+  }
+}
+
+async function upsertQuestion(id, payload) {
+  // Insert or update one question, depending on whether its id already exists.
+  const { data, error } = await getQuestionTable().upsert({
+    id,
+    ...toRdbRecord(payload),
+  })
+  assertSuccess(error, 'upsert question')
+
+  return {
+    source: 'database',
+    question: mapFirstQuestion(data, { id, ...payload }),
   }
 }
 
 async function deleteQuestion(id) {
-  const result = await getQuestionTable()
+  // Delete the matching question using delete().eq('id', id).
+  const { error } = await getQuestionTable()
     .delete()
     .eq('id', id)
-  assertSuccess(result, 'delete question')
+  assertSuccess(error, 'delete question')
 
-  return { source: 'cloud-rdb' }
+  return { source: 'database' }
 }
 
-async function fetchStats() {
-  const [totalResult, choiceResult, judgeResult] = await Promise.all([
-    getQuestionTable().select('id', { count: 'exact', head: true }),
-    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'CHOICE'),
-    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'JUDGE'),
-  ])
+async function fetchAllQuestions() {
+  // Query the question table through the initialized app-level CloudBase client.
+  const { data, error } = await getQuestionTable()
+    .select('*')
+  assertSuccess(error, 'query question table')
 
-  assertSuccess(totalResult, 'count questions')
-  assertSuccess(choiceResult, 'count choice questions')
-  assertSuccess(judgeResult, 'count judge questions')
-
-  return {
-    total: Number(totalResult.count || 0),
-    choice: Number(choiceResult.count || 0),
-    judge: Number(judgeResult.count || 0),
-  }
+  return (Array.isArray(data) ? data : []).map(mapQuestion)
 }
 
 function toRdbRecord(payload) {
@@ -148,9 +118,16 @@ function toRdbRecord(payload) {
   }
 }
 
+function mapFirstQuestion(data, fallback) {
+  const row = Array.isArray(data) ? data[0] : data
+  return mapQuestion(row || fallback)
+}
+
 function mapQuestion(row) {
+  if (!row) return null
+
   return {
-    id: String(row.id),
+    id: row.id === undefined || row.id === null ? '' : String(row.id),
     type: row.type,
     content: row.content,
     options: normalizeOptions(row.options),
@@ -171,24 +148,38 @@ function normalizeOptions(options) {
   }
 }
 
-function assertSuccess(result, operation) {
-  if (result && result.error) {
-    throw new Error(`${operation} failed: ${result.error.message || result.error.code || 'unknown error'}`)
+function assertSuccess(error, operation) {
+  if (error) {
+    throw new Error(`${operation} failed: ${error.message || error.code || 'unknown error'}`)
   }
 }
 
-function escapeLike(value) {
-  return String(value).replace(/[%_]/g, '\\$&')
+function getStats(questions) {
+  return {
+    total: questions.length,
+    choice: questions.filter((question) => question.type === 'CHOICE').length,
+    judge: questions.filter((question) => question.type === 'JUDGE').length,
+  }
+}
+
+function containsText(content, search) {
+  const query = String(search || '').trim().toLowerCase()
+  return !query || String(content || '').toLowerCase().includes(query)
+}
+
+function sortByNewest(first, second) {
+  return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()
 }
 
 function shuffle(items) {
-  for (let index = items.length - 1; index > 0; index -= 1) {
+  const shuffled = [...items]
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
-    const current = items[index]
-    items[index] = items[randomIndex]
-    items[randomIndex] = current
+    const current = shuffled[index]
+    shuffled[index] = shuffled[randomIndex]
+    shuffled[randomIndex] = current
   }
-  return items
+  return shuffled
 }
 
 module.exports = {
@@ -197,5 +188,6 @@ module.exports = {
   getQuestionById,
   createQuestion,
   updateQuestion,
+  upsertQuestion,
   deleteQuestion,
 }

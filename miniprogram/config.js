@@ -5,7 +5,7 @@
 const host = '14592619.qcloud.la'
 
 const config = {
-  apiBaseUrl: 'http://127.0.0.1:3000',
+  apiBaseUrl: 'mysql://[DB-USERNAME]:[DB-PASSWORD]@sh-cynosdbmysql-grp-mavu3pdo.sql.tencentcdb.com:22025/cloud1-d4g11jwpy015d4066',
 
   // 测试的请求地址，用于测试会话
   requestUrl: 'https://mp.weixin.qq.com',

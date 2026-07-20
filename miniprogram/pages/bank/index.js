@@ -1,7 +1,12 @@
 const bio = require('../../util/bio')
 const { getImageUrls } = require('../../util/cloud-images')
 
-const PAGE_SIZE = 8
+
+const PAGE_SIZE = 8;
+
+
+
+
 
 Page({
   data: {
@@ -26,8 +31,36 @@ Page({
   },
 
   onLoad() {
+    this.test()
     getImageUrls().then(({ logo }) => this.setData({ logoUrl: logo }))
       .catch((error) => console.error('Failed to load logo from cloud storage.', error))
+  },
+
+  async test() {
+    console.log('开始测试 CloudBase RDB 查询')
+    const cloudbase = getApp().globalData.cloudbase
+
+    if (!cloudbase) {
+      console.error('CloudBase 尚未初始化，请先检查 app.js 的 onLaunch 配置。')
+      return
+    }
+
+    try {
+      const { data, error } = await cloudbase
+        .rdb()
+        .from('question')
+        .select('*')
+        .limit(10)
+
+      if (error) {
+        console.error('CloudBase RDB 查询失败：', error)
+        return
+      }
+
+      console.log('CloudBase RDB 查询成功：', data)
+    } catch (error) {
+      console.error('CloudBase RDB 查询异常：', error)
+    }
   },
 
   onShow() {

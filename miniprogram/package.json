@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cloudbase/js-sdk": "^3.6.3"
+    "@cloudbase/wx-cloud-client-sdk": "^1.8.10"
   }
 }

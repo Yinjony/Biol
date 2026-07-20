@@ -1,4 +1,5 @@
 const config = require('./config')
+const { init } = require("@cloudbase/wx-cloud-client-sdk");
 
 App({
   onLaunch() {
@@ -7,11 +8,10 @@ App({
         env: config.envId,
         traceUser: true,
       })
-      this.globalData.cloudbase = wx.cloud
+      this.globalData.cloudbase = init(wx.cloud)
     }
   },
   globalData: {
-    cloudbase: null,
     appName: '生物做题小程序',
   },
 })

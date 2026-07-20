@@ -29,22 +29,21 @@ app.get('/api/questions', async (req, res, next) => {
     const search = String(req.query.search || '').trim()
     const page = clampInt(req.query.page, 1, 100000, 1)
     const pageSize = clampInt(req.query.pageSize, 1, 100, 8)
-    const whereSql = search ? 'WHERE content ILIKE $1' : ''
+    const whereSql = search ? 'WHERE content LIKE ?' : ''
     const params = search ? [`%${search}%`] : []
-    const countResult = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM "Question" ${whereSql}`,
+    const [countRows] = await pool.execute(
+      `SELECT COUNT(*) AS total FROM question ${whereSql}`,
       params
     )
-    const total = countResult.rows[0].total
+    const total = Number(countRows[0].total)
     const offset = (page - 1) * pageSize
-    const listResult = await pool.query(
+    const [listRows] = await pool.execute(
       `
-      SELECT id::text, type, content, options, answer, "createdAt", "updatedAt"
-      FROM "Question"
+      SELECT id, type, content, options, answer, createdAt, updatedAt
+      FROM question
       ${whereSql}
-      ORDER BY "createdAt" DESC
-      LIMIT $${params.length + 1}
-      OFFSET $${params.length + 2}
+      ORDER BY createdAt DESC
+      LIMIT ? OFFSET ?
       `,
       [...params, pageSize, offset]
     )
@@ -52,7 +51,7 @@ app.get('/api/questions', async (req, res, next) => {
 
     res.json({
       ok: true,
-      data: listResult.rows.map(mapQuestion),
+      data: listRows.map(mapQuestion),
       total,
       page,
       pageSize,
@@ -67,19 +66,19 @@ app.get('/api/questions', async (req, res, next) => {
 app.get('/api/questions/random', async (req, res, next) => {
   try {
     const count = clampInt(req.query.count, 1, 100, 10)
-    const result = await pool.query(
+    const [rows] = await pool.execute(
       `
-      SELECT id::text, type, content, options, answer, "createdAt", "updatedAt"
-      FROM "Question"
-      ORDER BY random()
-      LIMIT $1
+      SELECT id, type, content, options, answer, createdAt, updatedAt
+      FROM question
+      ORDER BY RAND()
+      LIMIT ?
       `,
       [count]
     )
 
     res.json({
       ok: true,
-      data: result.rows.map(mapQuestion),
+      data: rows.map(mapQuestion),
     })
   } catch (error) {
     next(error)
@@ -88,21 +87,21 @@ app.get('/api/questions/random', async (req, res, next) => {
 
 app.get('/api/questions/:id', async (req, res, next) => {
   try {
-    const result = await pool.query(
+    const [rows] = await pool.execute(
       `
-      SELECT id::text, type, content, options, answer, "createdAt", "updatedAt"
-      FROM "Question"
-      WHERE id = $1
+      SELECT id, type, content, options, answer, createdAt, updatedAt
+      FROM question
+      WHERE id = ?
       `,
       [req.params.id]
     )
 
-    if (result.rowCount === 0) {
+    if (rows.length === 0) {
       res.status(404).json({ ok: false, message: '题目不存在' })
       return
     }
 
-    res.json({ ok: true, data: mapQuestion(result.rows[0]) })
+    res.json({ ok: true, data: mapQuestion(rows[0]) })
   } catch (error) {
     next(error)
   }
@@ -125,16 +124,19 @@ app.post('/api/questions/import', documentUpload.single('file'), async (req, res
 app.post('/api/questions', async (req, res, next) => {
   try {
     const payload = normalizePayload(req.body)
-    const result = await pool.query(
+    const [result] = await pool.execute(
       `
-      INSERT INTO "Question" (type, content, options, answer)
-      VALUES ($1::question_type, $2, $3::jsonb, $4)
-      RETURNING id::text, type, content, options, answer, "createdAt", "updatedAt"
+      INSERT INTO question (type, content, options, answer)
+      VALUES (?, ?, ?, ?)
       `,
       [payload.type, payload.content, payload.options, payload.answer]
     )
 
-    res.status(201).json({ ok: true, data: mapQuestion(result.rows[0]) })
+    const [rows] = await pool.execute(
+      'SELECT id, type, content, options, answer, createdAt, updatedAt FROM question WHERE id = ?',
+      [result.insertId]
+    )
+    res.status(201).json({ ok: true, data: mapQuestion(rows[0]) })
   } catch (error) {
     next(error)
   }
@@ -143,25 +145,28 @@ app.post('/api/questions', async (req, res, next) => {
 app.put('/api/questions/:id', async (req, res, next) => {
   try {
     const payload = normalizePayload(req.body)
-    const result = await pool.query(
+    const [result] = await pool.execute(
       `
-      UPDATE "Question"
-      SET type = $1::question_type,
-          content = $2,
-          options = $3::jsonb,
-          answer = $4
-      WHERE id = $5
-      RETURNING id::text, type, content, options, answer, "createdAt", "updatedAt"
+      UPDATE question
+      SET type = ?,
+          content = ?,
+          options = ?,
+          answer = ?
+      WHERE id = ?
       `,
       [payload.type, payload.content, payload.options, payload.answer, req.params.id]
     )
 
-    if (result.rowCount === 0) {
+    if (result.affectedRows === 0) {
       res.status(404).json({ ok: false, message: '题目不存在' })
       return
     }
 
-    res.json({ ok: true, data: mapQuestion(result.rows[0]) })
+    const [rows] = await pool.execute(
+      'SELECT id, type, content, options, answer, createdAt, updatedAt FROM question WHERE id = ?',
+      [req.params.id]
+    )
+    res.json({ ok: true, data: mapQuestion(rows[0]) })
   } catch (error) {
     next(error)
   }
@@ -169,9 +174,9 @@ app.put('/api/questions/:id', async (req, res, next) => {
 
 app.delete('/api/questions/:id', async (req, res, next) => {
   try {
-    const result = await pool.query('DELETE FROM "Question" WHERE id = $1', [req.params.id])
+    const [result] = await pool.execute('DELETE FROM question WHERE id = ?', [req.params.id])
 
-    if (result.rowCount === 0) {
+    if (result.affectedRows === 0) {
       res.status(404).json({ ok: false, message: '题目不存在' })
       return
     }
@@ -203,14 +208,18 @@ initDb()
   })
 
 async function getStats() {
-  const result = await pool.query(`
+  const [rows] = await pool.query(`
     SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE type = 'CHOICE')::int AS choice,
-      COUNT(*) FILTER (WHERE type = 'JUDGE')::int AS judge
-    FROM "Question"
+      COUNT(*) AS total,
+      SUM(type = 'CHOICE') AS choice,
+      SUM(type = 'JUDGE') AS judge
+    FROM question
   `)
-  return result.rows[0]
+  return {
+    total: Number(rows[0].total),
+    choice: Number(rows[0].choice || 0),
+    judge: Number(rows[0].judge || 0),
+  }
 }
 
 function normalizePayload(body) {

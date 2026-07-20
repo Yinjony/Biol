@@ -1,73 +1,94 @@
 const path = require('path')
 const dotenv = require('dotenv')
-const { Pool } = require('pg')
+const mysql = require('mysql2/promise')
 
 dotenv.config({ path: path.join(__dirname, '.env') })
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME || 'Biol_DB',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'Yinjojony',
-  max: 10,
-})
+const pool = mysql.createPool(createConnectionOptions())
 
 const schemaSql = `
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'question_type') THEN
-    CREATE TYPE question_type AS ENUM ('CHOICE', 'JUDGE');
-  END IF;
-END
-$$;
-
-CREATE TABLE IF NOT EXISTS "Question" (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type question_type NOT NULL,
+CREATE TABLE IF NOT EXISTS question (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  type ENUM('CHOICE', 'JUDGE') NOT NULL,
   content TEXT NOT NULL,
-  options JSONB,
+  options JSON NULL,
   answer VARCHAR(10) NOT NULL,
-  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-  "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_question_content_trgm
-  ON "Question" USING gin (content gin_trgm_ops);
-
-CREATE OR REPLACE FUNCTION set_question_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW."updatedAt" = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_question_updated_at ON "Question";
-CREATE TRIGGER trg_question_updated_at
-BEFORE UPDATE ON "Question"
-FOR EACH ROW
-EXECUTE FUNCTION set_question_updated_at();
+  createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (id),
+  INDEX idx_question_created_at (createdAt),
+  INDEX idx_question_type (type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `
 
 async function initDb() {
   await pool.query(schemaSql)
 }
 
+function createConnectionOptions() {
+  const databaseUrl = process.env.DATABASE_URL
+  const options = databaseUrl ? parseDatabaseUrl(databaseUrl) : {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.DB_PORT || 3306),
+    database: process.env.DB_NAME || '',
+    user: process.env.DB_USER || '',
+    password: process.env.DB_PASSWORD || '',
+  }
+
+  return {
+    ...options,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    charset: 'utf8mb4',
+    dateStrings: true,
+    supportBigNumbers: true,
+    bigNumberStrings: true,
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+  }
+}
+
+function parseDatabaseUrl(databaseUrl) {
+  const url = new URL(databaseUrl)
+  if (url.protocol !== 'mysql:') {
+    throw new Error('DATABASE_URL must use the mysql:// protocol.')
+  }
+
+  const database = url.pathname.slice(1)
+  if (!url.hostname || !database) {
+    throw new Error('DATABASE_URL must include a database host and name.')
+  }
+
+  return {
+    host: url.hostname,
+    port: Number(url.port || 3306),
+    database,
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+  }
+}
+
 function mapQuestion(row) {
   if (!row) return null
 
   return {
-    id: row.id,
+    id: String(row.id),
     type: row.type,
     content: row.content,
-    options: row.options,
+    options: parseOptions(row.options),
     answer: row.answer,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  }
+}
+
+function parseOptions(options) {
+  if (typeof options !== 'string') return options
+
+  try {
+    return JSON.parse(options)
+  } catch (error) {
+    return null
   }
 }
 

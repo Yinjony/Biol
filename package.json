@@ -26,12 +26,13 @@
     "eslint-plugin-promise": "^4.0.0"
   },
   "dependencies": {
+    "@cloudbase/wx-cloud-client-sdk": "^1.8.10",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mammoth": "^1.12.0",
     "multer": "^2.2.0",
-    "pg": "^8.13.1",
+    "mysql2": "^3.23.1",
     "word-extractor": "^1.0.4"
   }
 }
