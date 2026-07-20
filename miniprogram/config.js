@@ -5,7 +5,8 @@
 const host = '14592619.qcloud.la'
 
 const config = {
-  apiBaseUrl: 'mysql://[DB-USERNAME]:[DB-PASSWORD]@sh-cynosdbmysql-grp-mavu3pdo.sql.tencentcdb.com:22025/cloud1-d4g11jwpy015d4066',
+  // This HTTP endpoint is used only for Word document parsing during import.
+  documentImportApiBaseUrl: 'http://127.0.0.1:3000',
 
   // 测试的请求地址，用于测试会话
   requestUrl: 'https://mp.weixin.qq.com',
@@ -15,8 +16,7 @@ const config = {
   envId: 'cloud1-d4g11jwpy015d4066',
   // envId: 'test-f0b102',
 
-  // Question data source: use CloudBase RDB first and retain the original HTTP API as fallback.
-  questionDataSource: 'cloud-rdb',
+  // Question data is stored exclusively in CloudBase RDB.
   rdbQuestionTable: 'question',
 
   // 云开发-存储 示例文件的文件 ID

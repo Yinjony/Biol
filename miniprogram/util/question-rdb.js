@@ -76,20 +76,6 @@ async function updateQuestion(id, payload) {
   }
 }
 
-async function upsertQuestion(id, payload) {
-  // Insert or update one question, depending on whether its id already exists.
-  const { data, error } = await getQuestionTable().upsert({
-    id,
-    ...toRdbRecord(payload),
-  })
-  assertSuccess(error, 'upsert question')
-
-  return {
-    source: 'database',
-    question: mapFirstQuestion(data, { id, ...payload }),
-  }
-}
-
 async function deleteQuestion(id) {
   // Delete the matching question using delete().eq('id', id).
   const { error } = await getQuestionTable()
@@ -188,6 +174,5 @@ module.exports = {
   getQuestionById,
   createQuestion,
   updateQuestion,
-  upsertQuestion,
   deleteQuestion,
 }

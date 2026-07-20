@@ -4,10 +4,6 @@ const { getImageUrls } = require('../../util/cloud-images')
 
 const PAGE_SIZE = 8;
 
-
-
-
-
 Page({
   data: {
     logoUrl: '',
@@ -31,36 +27,8 @@ Page({
   },
 
   onLoad() {
-    this.test()
     getImageUrls().then(({ logo }) => this.setData({ logoUrl: logo }))
       .catch((error) => console.error('Failed to load logo from cloud storage.', error))
-  },
-
-  async test() {
-    console.log('开始测试 CloudBase RDB 查询')
-    const cloudbase = getApp().globalData.cloudbase
-
-    if (!cloudbase) {
-      console.error('CloudBase 尚未初始化，请先检查 app.js 的 onLaunch 配置。')
-      return
-    }
-
-    try {
-      const { data, error } = await cloudbase
-        .rdb()
-        .from('question')
-        .select('*')
-        .limit(10)
-
-      if (error) {
-        console.error('CloudBase RDB 查询失败：', error)
-        return
-      }
-
-      console.log('CloudBase RDB 查询成功：', data)
-    } catch (error) {
-      console.error('CloudBase RDB 查询异常：', error)
-    }
   },
 
   onShow() {
@@ -166,10 +134,6 @@ Page({
       canPrevPage: result.page > 1,
       canNextPage: result.page < result.pageCount,
     })
-
-    if (result.source === 'local' && result.error) {
-      showToast('数据库未连接，显示本地缓存')
-    }
   },
 })
 
