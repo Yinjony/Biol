@@ -45,4 +45,8 @@ function getImageUrls() {
   return imageUrlsPromise
 }
 
-module.exports = { getImageUrls }
+function getImageFileIds() {
+  return FILE_IDS
+}
+
+module.exports = { getImageUrls, getImageFileIds }

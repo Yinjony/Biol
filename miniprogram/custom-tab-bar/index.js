@@ -1,29 +1,37 @@
-const { getImageUrls } = require('../util/cloud-images')
+const { getImageFileIds } = require('../util/cloud-images')
+
+const imageFileIds = getImageFileIds()
 
 const tabs = [
-  { pagePath: 'pages/bank/index', text: '\u9898\u5e93\u7ba1\u7406', iconKey: 'tabBank', selectedIconKey: 'tabBankActive' },
-  { pagePath: 'pages/quiz/index', text: '\u968f\u673a\u7ec3\u4e60', iconKey: 'tabQuiz', selectedIconKey: 'tabQuizActive' },
-  { pagePath: 'pages/create/index', text: '\u65b0\u589e\u9898\u76ee', iconKey: 'tabCreate', selectedIconKey: 'tabCreateActive' },
+  {
+    pagePath: 'pages/bank/index',
+    text: '\u9898\u5e93\u7ba1\u7406',
+    iconFileId: imageFileIds.tabBank,
+    selectedIconFileId: imageFileIds.tabBankActive,
+  },
+  {
+    pagePath: 'pages/quiz/index',
+    text: '\u968f\u673a\u7ec3\u4e60',
+    iconFileId: imageFileIds.tabQuiz,
+    selectedIconFileId: imageFileIds.tabQuizActive,
+  },
+  {
+    pagePath: 'pages/create/index',
+    text: '\u65b0\u589e\u9898\u76ee',
+    iconFileId: imageFileIds.tabCreate,
+    selectedIconFileId: imageFileIds.tabCreateActive,
+  },
 ]
 
 Component({
   data: {
     selected: 0,
-    tabs,
+    tabs: createTabData(0),
   },
 
   lifetimes: {
     attached() {
       this.updateSelected()
-      getImageUrls().then((imageUrls) => {
-        this.setData({
-          tabs: tabs.map((tab) => ({
-            ...tab,
-            iconUrl: imageUrls[tab.iconKey],
-            selectedIconUrl: imageUrls[tab.selectedIconKey],
-          })),
-        })
-      }).catch((error) => console.error('Failed to load tab bar images from cloud storage.', error))
     },
   },
 
@@ -38,7 +46,11 @@ Component({
       const pages = getCurrentPages()
       const current = pages[pages.length - 1]
       const selected = tabs.findIndex((tab) => tab.pagePath === current.route)
-      this.setData({ selected: selected < 0 ? 0 : selected })
+      const selectedIndex = selected < 0 ? 0 : selected
+      this.setData({
+        selected: selectedIndex,
+        tabs: createTabData(selectedIndex),
+      })
     },
 
     switchTab(event) {
@@ -48,3 +60,10 @@ Component({
     },
   },
 })
+
+function createTabData(selected) {
+  return tabs.map((tab, index) => ({
+    ...tab,
+    iconSrc: index === selected ? tab.selectedIconFileId : tab.iconFileId,
+  }))
+}
