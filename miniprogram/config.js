@@ -12,7 +12,7 @@ const config = {
   host,
 
   // 云开发环境 ID
-  envId: 'release-b86096',
+  envId: 'cloud1-d4g11jwpy015d4066',
   // envId: 'test-f0b102',
 
   // 云开发-存储 示例文件的文件 ID

@@ -1,7 +1,9 @@
 const bio = require('../../util/bio')
+const { getImageUrls } = require('../../util/cloud-images')
 
 Page({
   data: {
+    logoUrl: '',
     questions: [],
     quizCountOptions: bio.QUIZ_COUNT_OPTIONS,
     quizCountIndex: 0,
@@ -12,6 +14,11 @@ Page({
     quizItems: [],
     hasQuizItems: false,
     quizStatus: '未开始',
+  },
+
+  onLoad() {
+    getImageUrls().then(({ logo }) => this.setData({ logoUrl: logo }))
+      .catch((error) => console.error('Failed to load logo from cloud storage.', error))
   },
 
   toggleQuizCountMenu() {

@@ -1,9 +1,11 @@
 const bio = require('../../util/bio')
+const { getImageUrls } = require('../../util/cloud-images')
 
 const PAGE_SIZE = 8
 
 Page({
   data: {
+    logoUrl: '',
     questions: [],
     stats: {
       total: 0,
@@ -21,6 +23,11 @@ Page({
     canPrevPage: false,
     canNextPage: false,
     editingQuestionId: '',
+  },
+
+  onLoad() {
+    getImageUrls().then(({ logo }) => this.setData({ logoUrl: logo }))
+      .catch((error) => console.error('Failed to load logo from cloud storage.', error))
   },
 
   onShow() {

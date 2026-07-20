@@ -1,7 +1,7 @@
 <view class="page-shell">
   <view class="hero-panel">
     <view class="hero-brand">
-      <image class="hero-logo" src="/image/logo.png" mode="aspectFill" />
+      <image class="hero-logo" src="{{logoUrl}}" mode="aspectFill" />
       <view class="hero-copy">
         <text class="hero-title">{{formTitle}}</text>
         <text class="hero-meta">{{formMeta}}</text>

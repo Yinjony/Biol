@@ -1,0 +1,32 @@
+.tab-bar {
+  display: flex;
+  box-sizing: border-box;
+  height: calc(104rpx + env(safe-area-inset-bottom));
+  padding: 10rpx 20rpx calc(10rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #edf0ee;
+  background: #ffffff;
+}
+
+.tab-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #68746d;
+}
+
+.tab-icon {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.tab-label {
+  margin-top: 3rpx;
+  font-size: 20rpx;
+  line-height: 1.2;
+}
+
+.selected {
+  color: #1f8a5b;
+}

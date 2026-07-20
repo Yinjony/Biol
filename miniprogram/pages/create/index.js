@@ -1,10 +1,12 @@
 const bio = require('../../util/bio')
 const api = require('../../util/api')
+const { getImageUrls } = require('../../util/cloud-images')
 
 const defaultQuestionAnswerPicker = makeQuestionAnswerPickerState('CHOICE', 'A')
 
 Page({
   data: {
+    logoUrl: '',
     isManualMode: true,
     isImportMode: false,
     formTitle: '新增题目',
@@ -19,6 +21,11 @@ Page({
     hasImportQuestions: false,
     importQuestionCount: 0,
     editingImportedQuestionId: '',
+  },
+
+  onLoad() {
+    getImageUrls().then(({ logo }) => this.setData({ logoUrl: logo }))
+      .catch((error) => console.error('Failed to load logo from cloud storage.', error))
   },
 
   onShow() {
