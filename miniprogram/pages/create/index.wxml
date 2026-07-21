@@ -42,7 +42,7 @@
 
   <view wx:if="{{isManualMode}}" class="section card">
     <view class="field-row manual-select-row {{isQuestionTypeMenuOpen || isAnswerMenuOpen ? 'menu-open' : ''}}">
-      <view class="field dropdown-field">
+      <view class="field dropdown-field {{isQuestionTypeMenuOpen ? 'is-menu-active' : ''}}">
         <text class="field-label">题型</text>
         <button class="dropdown-trigger" hover-class="button-hover" bindtap="toggleQuestionTypeMenu">{{questionTypeName}}</button>
         <view class="dropdown-menu" wx:if="{{isQuestionTypeMenuOpen}}">
@@ -57,7 +57,7 @@
         </view>
       </view>
 
-      <view class="field dropdown-field">
+      <view class="field dropdown-field {{isAnswerMenuOpen ? 'is-menu-active' : ''}}">
         <text class="field-label">答案</text>
         <button class="dropdown-trigger" hover-class="button-hover" bindtap="toggleAnswerMenu">{{answerInput}}</button>
         <view class="dropdown-menu" wx:if="{{isAnswerMenuOpen}}">

@@ -10,31 +10,56 @@ function getQuestionTable() {
 }
 
 async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
-  const questions = await fetchAllQuestions()
-  const matchedQuestions = questions
-    .filter((question) => containsText(question.content, search))
-    .sort(sortByNewest)
-  const total = matchedQuestions.length
+  const offset = (Math.max(page, 1) - 1) * pageSize
+  let query = getQuestionTable()
+    .select('*', { count: 'exact' })
+    .order('id', { ascending: false })
+
+  if (search) {
+    query = query.ilike('content', `%${escapeLike(search)}%`)
+  }
+
+  const [pageResult, stats] = await Promise.all([
+    query.range(offset, offset + pageSize - 1),
+    fetchStats(),
+  ])
+  assertSuccess(pageResult.error, 'query question table')
+
+  const total = Number(pageResult.count || 0)
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const pageIndex = Math.min(Math.max(page, 1), pageCount)
-  const offset = (pageIndex - 1) * pageSize
 
   return {
     source: 'database',
-    questions: matchedQuestions.slice(offset, offset + pageSize),
+    questions: (pageResult.data || []).map(mapQuestion),
     total,
     page: pageIndex,
     pageSize,
     pageCount,
-    stats: getStats(questions),
+    stats,
   }
 }
 
 async function fetchRandomQuestions(count) {
-  const questions = await fetchAllQuestions()
+  const totalResult = await getQuestionTable().select('id', { count: 'exact', head: true })
+  assertSuccess(totalResult.error, 'count questions')
+
+  const total = Number(totalResult.count || 0)
+  if (total === 0) {
+    return { source: 'database', questions: [] }
+  }
+
+  const size = Math.min(count, total)
+  const offset = Math.floor(Math.random() * (total - size + 1))
+  const result = await getQuestionTable()
+    .select('*')
+    .order('id', { ascending: false })
+    .range(offset, offset + size - 1)
+  assertSuccess(result.error, 'query random questions')
+
   return {
     source: 'database',
-    questions: shuffle(questions).slice(0, count),
+    questions: shuffle((result.data || []).map(mapQuestion)),
   }
 }
 
@@ -65,10 +90,11 @@ async function createQuestion(payload) {
 
 async function updateQuestion(id, payload) {
   // Update the matching question using update(...).eq('id', id).
-  const { data, error } = await getQuestionTable()
-    .update(toRdbRecord(payload))
+  const { data, error, count } = await getQuestionTable()
+    .update(toRdbRecord(payload), { count: 'exact' })
     .eq('id', id)
   assertSuccess(error, 'update question')
+  assertAffected(count, 'update question')
 
   return {
     source: 'database',
@@ -78,21 +104,30 @@ async function updateQuestion(id, payload) {
 
 async function deleteQuestion(id) {
   // Delete the matching question using delete().eq('id', id).
-  const { error } = await getQuestionTable()
-    .delete()
+  const { error, count } = await getQuestionTable()
+    .delete({ count: 'exact' })
     .eq('id', id)
   assertSuccess(error, 'delete question')
+  assertAffected(count, 'delete question')
 
   return { source: 'database' }
 }
 
-async function fetchAllQuestions() {
-  // Query the question table through the initialized app-level CloudBase client.
-  const { data, error } = await getQuestionTable()
-    .select('*')
-  assertSuccess(error, 'query question table')
+async function fetchStats() {
+  const [totalResult, choiceResult, judgeResult] = await Promise.all([
+    getQuestionTable().select('id', { count: 'exact', head: true }),
+    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'CHOICE'),
+    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'JUDGE'),
+  ])
+  assertSuccess(totalResult.error, 'count questions')
+  assertSuccess(choiceResult.error, 'count choice questions')
+  assertSuccess(judgeResult.error, 'count judge questions')
 
-  return (Array.isArray(data) ? data : []).map(mapQuestion)
+  return {
+    total: Number(totalResult.count || 0),
+    choice: Number(choiceResult.count || 0),
+    judge: Number(judgeResult.count || 0),
+  }
 }
 
 function toRdbRecord(payload) {
@@ -140,21 +175,14 @@ function assertSuccess(error, operation) {
   }
 }
 
-function getStats(questions) {
-  return {
-    total: questions.length,
-    choice: questions.filter((question) => question.type === 'CHOICE').length,
-    judge: questions.filter((question) => question.type === 'JUDGE').length,
+function assertAffected(count, operation) {
+  if (Number(count) === 0) {
+    throw new Error(`${operation} did not affect any record. Check the record id and RDB write permissions.`)
   }
 }
 
-function containsText(content, search) {
-  const query = String(search || '').trim().toLowerCase()
-  return !query || String(content || '').toLowerCase().includes(query)
-}
-
-function sortByNewest(first, second) {
-  return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()
+function escapeLike(value) {
+  return String(value).replace(/[%_]/g, '\\$&')
 }
 
 function shuffle(items) {

@@ -45,8 +45,16 @@ Component({
     updateSelected() {
       const pages = getCurrentPages()
       const current = pages[pages.length - 1]
+      if (!current || !current.route) return
+
       const selected = tabs.findIndex((tab) => tab.pagePath === current.route)
-      const selectedIndex = selected < 0 ? 0 : selected
+      this.setSelected(selected < 0 ? 0 : selected)
+    },
+
+    setSelected(index) {
+      const selectedIndex = Number(index)
+      if (!Number.isInteger(selectedIndex) || !tabs[selectedIndex]) return
+
       this.setData({
         selected: selectedIndex,
         tabs: createTabData(selectedIndex),
@@ -54,9 +62,15 @@ Component({
     },
 
     switchTab(event) {
-      const index = event.currentTarget.dataset.index
+      const index = Number(event.currentTarget.dataset.index)
+      if (!Number.isInteger(index) || !tabs[index]) return
       if (index === this.data.selected) return
-      wx.switchTab({ url: `/${tabs[index].pagePath}` })
+
+      this.setSelected(index)
+      wx.switchTab({
+        url: `/${tabs[index].pagePath}`,
+        fail: () => this.updateSelected(),
+      })
     },
   },
 })

@@ -29,6 +29,7 @@ Page({
   },
 
   onShow() {
+    syncTabBar(this, 2)
     const pendingId = wx.getStorageSync(bio.PENDING_EDIT_KEY)
     if (!pendingId) return
 
@@ -281,4 +282,9 @@ function showToast(title) {
     icon: 'none',
     duration: 1800,
   })
+}
+
+function syncTabBar(page, selected) {
+  const tabBar = typeof page.getTabBar === 'function' && page.getTabBar()
+  if (tabBar) tabBar.setSelected(selected)
 }

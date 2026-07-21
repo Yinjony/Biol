@@ -404,7 +404,7 @@
 .backtop-button {
   position: fixed;
   right: 30rpx;
-  bottom: calc(100rpx + env(safe-area-inset-bottom));
+  bottom: calc(200rpx + env(safe-area-inset-bottom));
   z-index: 20;
 
   display: flex;
@@ -475,11 +475,16 @@
 
 .dropdown-field {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+}
+
+.dropdown-field.is-menu-active {
+  z-index: 3;
 }
 
 .dropdown-trigger {
   position: relative;
+  box-sizing: border-box;
   width: 100%;
   min-height: 78rpx;
   margin: 0;
@@ -526,6 +531,7 @@
   left: 0;
   z-index: 10;
   display: flex;
+  box-sizing: border-box;
   flex-direction: column;
   gap: 4rpx;
   padding: 10rpx;
@@ -567,6 +573,16 @@
 
 .manual-select-row > .field + .field {
   margin-top: 0;
+}
+
+@media (max-width: 500px) {
+  .manual-select-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .manual-select-row > .field + .field {
+    margin-top: 18rpx;
+  }
 }
 
 .question-content-field {

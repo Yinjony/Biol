@@ -21,6 +21,10 @@ Page({
       .catch((error) => console.error('Failed to load logo from cloud storage.', error))
   },
 
+  onShow() {
+    syncTabBar(this, 1)
+  },
+
   toggleQuizCountMenu() {
     this.setData({ isQuizCountMenuOpen: !this.data.isQuizCountMenuOpen })
   },
@@ -185,4 +189,9 @@ function showToast(title) {
     icon: 'none',
     duration: 1800,
   })
+}
+
+function syncTabBar(page, selected) {
+  const tabBar = typeof page.getTabBar === 'function' && page.getTabBar()
+  if (tabBar) tabBar.setSelected(selected)
 }
