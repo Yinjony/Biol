@@ -48,13 +48,42 @@
 }
 
 .profile-avatar-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  width: 132rpx;
+  height: 132rpx;
   background: #dff3e8;
-  color: #14663f;
-  font-size: 48rpx;
-  font-weight: 800;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.avatar-icon-head {
+  position: absolute;
+  top: 26rpx;
+  left: 50%;
+  width: 46rpx;
+  height: 46rpx;
+  background: #14663f;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.avatar-icon-body {
+  position: absolute;
+  bottom: -14rpx;
+  left: 50%;
+  width: 92rpx;
+  height: 68rpx;
+  background: #14663f;
+  border-radius: 46rpx 46rpx 0 0;
+  transform: translateX(-50%);
 }
 
 .profile-avatar-copy {
