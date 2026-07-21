@@ -21,6 +21,12 @@ const tabs = [
     iconFileId: imageFileIds.tabCreate,
     selectedIconFileId: imageFileIds.tabCreateActive,
   },
+  {
+    pagePath: 'pages/profile/index',
+    text: '\u6211\u7684',
+    iconFileId: '',
+    selectedIconFileId: '',
+  },
 ]
 
 Component({

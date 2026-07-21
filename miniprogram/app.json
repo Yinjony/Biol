@@ -2,7 +2,8 @@
   "pages": [
     "pages/bank/index",
     "pages/quiz/index",
-    "pages/create/index"
+    "pages/create/index",
+    "pages/profile/index"
   ],
   "window": {
     "navigationBarTextStyle": "white",
@@ -28,6 +29,10 @@
       {
         "pagePath": "pages/create/index",
         "text": "新增题目"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
       }
     ]
   },

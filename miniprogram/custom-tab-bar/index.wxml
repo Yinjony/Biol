@@ -6,7 +6,8 @@
     data-index="{{index}}"
     bindtap="switchTab"
   >
-    <image class="tab-icon" src="{{item.iconSrc}}" mode="aspectFit" />
+    <image wx:if="{{item.iconSrc}}" class="tab-icon" src="{{item.iconSrc}}" mode="aspectFit" />
+    <view wx:else class="tab-icon profile-tab-icon"></view>
     <text class="tab-label">{{item.text}}</text>
   </view>
 </view>

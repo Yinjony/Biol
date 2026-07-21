@@ -18,6 +18,7 @@ const config = {
 
   // Question data is stored exclusively in CloudBase RDB.
   rdbQuestionTable: 'question',
+  rdbProfileTable: 'user_profile',
 
   // 云开发-存储 示例文件的文件 ID
   demoImageFileId: 'cloud://release-b86096.7265-release-b86096-1258211818/demo.jpg',

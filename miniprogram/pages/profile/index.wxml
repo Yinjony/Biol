@@ -1,0 +1,48 @@
+<view class="page-shell">
+  <view class="hero-panel">
+    <view class="hero-brand">
+      <image class="hero-logo" src="{{logoUrl}}" mode="aspectFill" />
+      <view class="hero-copy">
+        <text class="hero-title">个人信息</text>
+        <text class="hero-meta">资料仅对当前 CloudBase 用户可见</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section card profile-card">
+    <view class="profile-heading">
+      <text class="profile-heading-title">我的资料</text>
+      <text class="profile-status">{{statusText}}</text>
+    </view>
+
+    <view class="profile-avatar-row">
+      <button class="profile-avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="选择头像">
+        <image wx:if="{{avatarDisplayUrl}}" class="profile-avatar" src="{{avatarDisplayUrl}}" mode="aspectFill" />
+        <view wx:else class="profile-avatar profile-avatar-placeholder">{{profileInitial}}</view>
+      </button>
+      <view class="profile-avatar-copy">
+        <text class="profile-avatar-title">头像</text>
+        <text class="profile-avatar-hint">点击头像，从微信相册选择</text>
+      </view>
+    </view>
+
+    <view class="field profile-name-field">
+      <text class="field-label">昵称</text>
+      <input
+        class="text-input"
+        type="text"
+        maxlength="20"
+        placeholder="请输入昵称"
+        value="{{profile.nickname}}"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <button class="primary-button profile-save-button" hover-class="button-hover" loading="{{saving}}" disabled="{{loading}}" bindtap="saveProfile">保存资料</button>
+  </view>
+
+  <view class="section profile-note">
+    <text class="profile-note-title">资料与权限</text>
+    <text class="profile-note-text">题库使用“读取全部数据，修改本人数据”时，CloudBase 会自动识别当前微信用户；不需要额外注册账号。</text>
+  </view>
+</view>

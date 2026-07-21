@@ -1,0 +1,114 @@
+@import "../common/bio.wxss";
+
+.profile-card {
+  padding: 28rpx 24rpx;
+}
+
+.profile-heading-title {
+  display: block;
+  color: #1f2a24;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.profile-status {
+  display: block;
+  margin-top: 8rpx;
+  color: #68746d;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  margin-top: 30rpx;
+}
+
+.profile-avatar-button {
+  width: 132rpx;
+  height: 132rpx;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.profile-avatar-button::after {
+  border: 0;
+}
+
+.profile-avatar {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 50%;
+}
+
+.profile-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dff3e8;
+  color: #14663f;
+  font-size: 48rpx;
+  font-weight: 800;
+}
+
+.profile-avatar-copy {
+  min-width: 0;
+}
+
+.profile-avatar-title,
+.profile-avatar-hint {
+  display: block;
+}
+
+.profile-avatar-title {
+  color: #1f2a24;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.profile-avatar-hint {
+  margin-top: 8rpx;
+  color: #68746d;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.profile-name-field {
+  margin-top: 30rpx;
+}
+
+.profile-save-button {
+  width: 100%;
+  margin-top: 30rpx;
+}
+
+.profile-note {
+  padding: 24rpx;
+  border: 1rpx solid #d8e8df;
+  border-radius: 16rpx;
+  background: #edf7f1;
+}
+
+.profile-note-title,
+.profile-note-text {
+  display: block;
+}
+
+.profile-note-title {
+  color: #14663f;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.profile-note-text {
+  margin-top: 10rpx;
+  color: #41604e;
+  font-size: 24rpx;
+  line-height: 1.65;
+}
