@@ -100,9 +100,14 @@ Page({
       return
     }
 
-    const result = await bio.createQuestion(validation.value)
-    showToast(result.source === 'database' ? '题目已保存' : '数据库未连接，已保存本地缓存')
-    this.resetForm()
+    try {
+      const result = await bio.createQuestion(validation.value)
+      showToast(result.source === 'database' ? '题目已保存' : '数据库未连接，已保存本地缓存')
+      this.resetForm()
+    } catch (error) {
+      console.error('Failed to create CloudBase RDB question.', error)
+      showToast('新增失败，请检查云函数与题库配置')
+    }
   },
 
   resetForm() {
@@ -241,6 +246,9 @@ Page({
         importStatus: '',
       })
       showToast(savedToDatabase === results.length ? '已保存全部题目' : '已保存到本地缓存')
+    } catch (error) {
+      console.error('Failed to save imported CloudBase RDB questions.', error)
+      showToast('导入题目保存失败，请检查云函数与题库配置')
     } finally {
       this.setData({ savingImportedQuestions: false })
     }

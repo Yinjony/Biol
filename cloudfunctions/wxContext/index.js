@@ -1,5 +1,5 @@
-// 云函数入口文件
 const cloud = require('wx-server-sdk')
+const crypto = require('crypto')
 
 cloud.init()
 
@@ -11,5 +11,9 @@ exports.main = async () => {
     openid: wxContext.OPENID,
     appid: wxContext.APPID,
     unionid: wxContext.UNIONID,
+    ownerKey: crypto
+      .createHash('sha256')
+      .update(`question-owner:${wxContext.OPENID}`)
+      .digest('hex'),
   }
 }

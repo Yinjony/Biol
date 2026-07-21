@@ -10,6 +10,10 @@ Component({
       type: String,
       value: '',
     },
+    canManage: {
+      type: Boolean,
+      value: false,
+    },
   },
 
   data: {

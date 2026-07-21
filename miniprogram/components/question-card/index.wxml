@@ -11,7 +11,7 @@
       {{option.label}}. {{option.text}}
     </view>
   </view>
-  <view class="card-actions">
+  <view class="card-actions" wx:if="{{canManage}}">
     <button class="tiny-button" hover-class="button-hover" bindtap="requestEdit">修改</button>
     <button class="tiny-button danger-text" hover-class="button-hover" bindtap="removeQuestion">删除</button>
   </view>
@@ -61,7 +61,7 @@
     </view>
   </view>
 
-  <view class="card-actions editor-actions">
+  <view class="card-actions editor-actions" wx:if="{{canManage}}">
     <button class="tiny-button" hover-class="button-hover" bindtap="cancelEdit">取消</button>
     <button class="tiny-button danger-text" hover-class="button-hover" bindtap="removeQuestion">删除</button>
     <button class="primary-button editor-save-button" hover-class="button-hover" bindtap="saveEdit">保存</button>

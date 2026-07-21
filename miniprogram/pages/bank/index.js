@@ -14,6 +14,7 @@ Page({
       judge: 0,
     },
     searchQuery: '',
+    showingMyQuestions: false,
     displayQuestions: [],
     hasDisplayQuestions: false,
     hasMatchedQuestions: false,
@@ -45,6 +46,14 @@ Page({
 
     clearTimeout(this.searchTimer)
     this.searchTimer = setTimeout(() => this.reloadQuestions(), 300)
+  },
+
+  toggleMyQuestions() {
+    this.setData({
+      showingMyQuestions: !this.data.showingMyQuestions,
+      pageIndex: 1,
+      editingQuestionId: '',
+    }, () => this.reloadQuestions())
   },
 
   onUnload() {
@@ -139,6 +148,7 @@ Page({
       search: this.data.searchQuery.trim(),
       page: this.data.pageIndex,
       pageSize: PAGE_SIZE,
+      ownerOnly: this.data.showingMyQuestions,
     })
     if (requestId !== this.questionRequestId) return
     const displayQuestions = result.questions.map(bio.normalizeQuestionForList)

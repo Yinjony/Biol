@@ -1,4 +1,7 @@
 const config = require('../config')
+const { getCurrentOwnerKey } = require('./current-user')
+
+const QUESTION_FIELDS = 'id,type,content,options,answer,createdAt,updatedAt'
 
 function getQuestionTable() {
   const cloudbase = getApp().globalData.cloudbase
@@ -9,11 +12,16 @@ function getQuestionTable() {
   return cloudbase.rdb().from(config.rdbQuestionTable)
 }
 
-async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
+async function fetchQuestionPage({ search = '', page = 1, pageSize = 8, ownerOnly = false } = {}) {
   const offset = (Math.max(page, 1) - 1) * pageSize
+  const ownerKey = ownerOnly ? await getCurrentOwnerKey() : ''
   let query = getQuestionTable()
-    .select('*', { count: 'exact' })
-    .order('id', { ascending: false })
+    .select(QUESTION_FIELDS, { count: 'exact' })
+    .order('createdAt', { ascending: false })
+
+  if (ownerKey) {
+    query = query.eq('owner_key', ownerKey)
+  }
 
   if (search) {
     query = query.ilike('content', `%${escapeLike(search)}%`)
@@ -21,7 +29,7 @@ async function fetchQuestionPage({ search = '', page = 1, pageSize = 8 } = {}) {
 
   const [pageResult, stats] = await Promise.all([
     query.range(offset, offset + pageSize - 1),
-    fetchStats(),
+    fetchStats(ownerKey),
   ])
   assertSuccess(pageResult.error, 'query question table')
 
@@ -52,8 +60,8 @@ async function fetchRandomQuestions(count) {
   const size = Math.min(count, total)
   const offset = Math.floor(Math.random() * (total - size + 1))
   const result = await getQuestionTable()
-    .select('*')
-    .order('id', { ascending: false })
+    .select(QUESTION_FIELDS)
+    .order('createdAt', { ascending: false })
     .range(offset, offset + size - 1)
   assertSuccess(result.error, 'query random questions')
 
@@ -66,7 +74,7 @@ async function fetchRandomQuestions(count) {
 async function getQuestionById(id) {
   // Query records by id using the CloudBase RDB API.
   const { data, error } = await getQuestionTable()
-    .select('*')
+    .select(QUESTION_FIELDS)
     .eq('id', id)
   assertSuccess(error, 'query question by id')
 
@@ -79,12 +87,18 @@ async function getQuestionById(id) {
 
 async function createQuestion(payload) {
   // Insert a new question using the CloudBase RDB API.
-  const { data, error } = await getQuestionTable().insert(toRdbRecord(payload))
+  const ownerKey = await getCurrentOwnerKey()
+  const record = {
+    id: createUuid(),
+    owner_key: ownerKey,
+    ...toRdbRecord(payload),
+  }
+  const { data, error } = await getQuestionTable().insert(record)
   assertSuccess(error, 'insert question')
 
   return {
     source: 'database',
-    question: mapFirstQuestion(data, payload),
+    question: mapFirstQuestion(data, record),
   }
 }
 
@@ -113,11 +127,11 @@ async function deleteQuestion(id) {
   return { source: 'database' }
 }
 
-async function fetchStats() {
+async function fetchStats(ownerKey = '') {
   const [totalResult, choiceResult, judgeResult] = await Promise.all([
-    getQuestionTable().select('id', { count: 'exact', head: true }),
-    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'CHOICE'),
-    getQuestionTable().select('id', { count: 'exact', head: true }).eq('type', 'JUDGE'),
+    createCountQuery(ownerKey),
+    createCountQuery(ownerKey, 'CHOICE'),
+    createCountQuery(ownerKey, 'JUDGE'),
   ])
   assertSuccess(totalResult.error, 'count questions')
   assertSuccess(choiceResult.error, 'count choice questions')
@@ -128,6 +142,13 @@ async function fetchStats() {
     choice: Number(choiceResult.count || 0),
     judge: Number(judgeResult.count || 0),
   }
+}
+
+function createCountQuery(ownerKey, type) {
+  let query = getQuestionTable().select('id', { count: 'exact', head: true })
+  if (ownerKey) query = query.eq('owner_key', ownerKey)
+  if (type) query = query.eq('type', type)
+  return query
 }
 
 function toRdbRecord(payload) {
@@ -183,6 +204,14 @@ function assertAffected(count, operation) {
 
 function escapeLike(value) {
   return String(value).replace(/[%_]/g, '\\$&')
+}
+
+function createUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16)
+    const value = character === 'x' ? random : (random & 0x3) | 0x8
+    return value.toString(16)
+  })
 }
 
 function shuffle(items) {

@@ -16,7 +16,7 @@ Page({
     loading: true,
     saving: false,
     hasProfile: false,
-    statusText: '',
+    statusText: '正在加载个人资料…',
   },
 
   onLoad() {

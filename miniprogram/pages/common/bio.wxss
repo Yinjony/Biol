@@ -113,6 +113,30 @@
   padding: 18rpx;
 }
 
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.search-row .text-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.my-questions-button {
+  flex: 0 0 auto;
+  min-height: 78rpx;
+  margin: 0;
+  padding: 0 22rpx;
+  border-radius: 16rpx;
+  background: #1f8a5b;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 78rpx;
+  white-space: nowrap;
+}
+
 .field {
   display: flex;
   min-width: 0;

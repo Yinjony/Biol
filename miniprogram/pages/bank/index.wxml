@@ -23,14 +23,17 @@
     </view>
   </view>
   <view class="section card search-card">
-    <input
-      class="text-input"
-      type="text"
-      confirm-type="search"
-      placeholder="输入题干关键词"
-      value="{{searchQuery}}"
-      bindinput="onSearchInput"
-    />
+    <view class="search-row">
+      <input
+        class="text-input"
+        type="text"
+        confirm-type="search"
+        placeholder="输入题干关键词"
+        value="{{searchQuery}}"
+        bindinput="onSearchInput"
+      />
+      <button class="my-questions-button" hover-class="button-hover" bindtap="toggleMyQuestions">{{showingMyQuestions ? '全部题目' : '我的题目'}}</button>
+    </view>
   </view>
 
   <view class="question-list" wx:if="{{hasDisplayQuestions}}">
@@ -39,6 +42,7 @@
       wx:for-item="question"
       wx:key="id"
       question="{{question}}"
+      can-manage="{{showingMyQuestions}}"
       editing-id="{{editingQuestionId}}"
       bind:editstart="startQuestionCardEdit"
       bind:editend="endQuestionCardEdit"
