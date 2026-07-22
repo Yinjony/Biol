@@ -1,0 +1,10 @@
+{
+  "name": "questionWrite",
+  "version": "1.0.0",
+  "description": "Write quiz questions to CloudBase RDB.",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "latest",
+    "wx-server-sdk": "latest"
+  }
+}

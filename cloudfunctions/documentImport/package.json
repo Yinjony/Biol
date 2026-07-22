@@ -1,0 +1,11 @@
+{
+  "name": "documentImport",
+  "version": "1.0.0",
+  "description": "Parse Word question documents uploaded from the mini program.",
+  "main": "index.js",
+  "dependencies": {
+    "mammoth": "^1.12.0",
+    "word-extractor": "^1.0.4",
+    "wx-server-sdk": "latest"
+  }
+}

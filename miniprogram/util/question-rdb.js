@@ -86,43 +86,25 @@ async function getQuestionById(id) {
 }
 
 async function createQuestion(payload) {
-  // Insert a new question using the CloudBase RDB API.
-  const ownerKey = await getCurrentOwnerKey()
-  const record = {
-    id: createUuid(),
-    owner_key: ownerKey,
-    ...toRdbRecord(payload),
-  }
-  const { data, error } = await getQuestionTable().insert(record)
-  assertSuccess(error, 'insert question')
+  const result = await writeQuestion('create', { payload })
 
   return {
     source: 'database',
-    question: mapFirstQuestion(data, record),
+    question: mapQuestion(result.question),
   }
 }
 
 async function updateQuestion(id, payload) {
-  // Update the matching question using update(...).eq('id', id).
-  const { data, error, count } = await getQuestionTable()
-    .update(toRdbRecord(payload), { count: 'exact' })
-    .eq('id', id)
-  assertSuccess(error, 'update question')
-  assertAffected(count, 'update question')
+  const result = await writeQuestion('update', { id, payload })
 
   return {
     source: 'database',
-    question: mapFirstQuestion(data, { id, ...payload }),
+    question: mapQuestion(result.question),
   }
 }
 
 async function deleteQuestion(id) {
-  // Delete the matching question using delete().eq('id', id).
-  const { error, count } = await getQuestionTable()
-    .delete({ count: 'exact' })
-    .eq('id', id)
-  assertSuccess(error, 'delete question')
-  assertAffected(count, 'delete question')
+  await writeQuestion('delete', { id })
 
   return { source: 'database' }
 }
@@ -151,20 +133,6 @@ function createCountQuery(ownerKey, type) {
   return query
 }
 
-function toRdbRecord(payload) {
-  return {
-    type: payload.type,
-    content: payload.content,
-    options: payload.type === 'CHOICE' ? payload.options || [] : null,
-    answer: payload.answer,
-  }
-}
-
-function mapFirstQuestion(data, fallback) {
-  const row = Array.isArray(data) ? data[0] : data
-  return mapQuestion(row || fallback)
-}
-
 function mapQuestion(row) {
   if (!row) return null
 
@@ -179,12 +147,34 @@ function mapQuestion(row) {
   }
 }
 
+async function writeQuestion(action, data) {
+  if (!wx.cloud || typeof wx.cloud.callFunction !== 'function') {
+    throw new Error('Cloud functions are unavailable. Check app.js initialization first.')
+  }
+
+  const result = await wx.cloud.callFunction({
+    name: 'questionWrite',
+    data: { action, ...data },
+  })
+  const payload = result && result.result || {}
+  if (payload.ok === false) {
+    throw new Error(payload.message || 'question write failed')
+  }
+  return payload
+}
+
 function normalizeOptions(options) {
   if (Array.isArray(options)) return options
   if (typeof options !== 'string') return options || null
 
   try {
-    return JSON.parse(options)
+    const parsed = JSON.parse(options)
+    if (Array.isArray(parsed)) return parsed
+    if (typeof parsed === 'string') {
+      const nestedParsed = JSON.parse(parsed)
+      return Array.isArray(nestedParsed) ? nestedParsed : null
+    }
+    return null
   } catch (error) {
     return null
   }
@@ -196,22 +186,8 @@ function assertSuccess(error, operation) {
   }
 }
 
-function assertAffected(count, operation) {
-  if (Number(count) === 0) {
-    throw new Error(`${operation} did not affect any record. Check the record id and RDB write permissions.`)
-  }
-}
-
 function escapeLike(value) {
   return String(value).replace(/[%_]/g, '\\$&')
-}
-
-function createUuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16)
-    const value = character === 'x' ? random : (random & 0x3) | 0x8
-    return value.toString(16)
-  })
 }
 
 function shuffle(items) {

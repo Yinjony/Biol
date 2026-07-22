@@ -26,6 +26,7 @@
       wx:for-item="question"
       wx:key="id"
       question="{{question}}"
+      can-manage="{{true}}"
       editing-id="{{editingImportedQuestionId}}"
       bind:editstart="startImportedQuestionEdit"
       bind:editend="endImportedQuestionEdit"

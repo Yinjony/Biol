@@ -1,6 +1,6 @@
 const bio = require('../../util/bio')
-const api = require('../../util/api')
 const { getImageUrls } = require('../../util/cloud-images')
+const { importQuestionDocument } = require('../../util/document-import')
 
 const defaultQuestionAnswerPicker = makeQuestionAnswerPickerState('CHOICE', 'A')
 
@@ -134,7 +134,7 @@ Page({
 
         this.setData({ importBusy: true, importStatus: '正在读取文件…' })
         try {
-          const result = await api.upload('/api/questions/import', file.path)
+          const result = await importQuestionDocument(file)
           const stamp = Date.now()
           const importQuestions = (result.data || []).map((question, index) => ({
             ...question,
@@ -161,6 +161,7 @@ Page({
           }
         } catch (error) {
           this.setData({ importStatus: '' })
+          console.log(error.message)
           showToast(error.message || '文件读取失败')
         } finally {
           this.setData({ importBusy: false })
@@ -225,8 +226,10 @@ Page({
     if (!this.data.importQuestions.length || this.data.savingImportedQuestions) return
 
     this.setData({ savingImportedQuestions: true })
+    let remainingQuestions = []
     try {
       const results = []
+      remainingQuestions = [...this.data.importQuestions]
       for (const question of this.data.importQuestions) {
         const result = await bio.createQuestion({
           type: question.type,
@@ -235,6 +238,7 @@ Page({
           answer: question.answer,
         })
         results.push(result)
+        remainingQuestions.shift()
       }
 
       const savedToDatabase = results.filter((result) => result.source === 'database').length
@@ -247,6 +251,16 @@ Page({
       })
       showToast(savedToDatabase === results.length ? '已保存全部题目' : '已保存到本地缓存')
     } catch (error) {
+      const savedCount = this.data.importQuestions.length - remainingQuestions.length
+      if (savedCount > 0) {
+        this.setData({
+          importQuestions: remainingQuestions,
+          hasImportQuestions: remainingQuestions.length > 0,
+          importQuestionCount: remainingQuestions.length,
+          editingImportedQuestionId: '',
+          importStatus: `已保存 ${savedCount} 道题，剩余 ${remainingQuestions.length} 道待保存。`,
+        })
+      }
       console.error('Failed to save imported CloudBase RDB questions.', error)
       showToast('导入题目保存失败，请检查云函数与题库配置')
     } finally {
