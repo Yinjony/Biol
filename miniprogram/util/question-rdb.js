@@ -29,7 +29,10 @@ async function fetchQuestionPage({ search = '', page = 1, pageSize = 8, ownerOnl
 
   const [pageResult, stats] = await Promise.all([
     query.range(offset, offset + pageSize - 1),
-    fetchStats(ownerKey),
+    fetchStats(ownerOnly).catch((error) => {
+      console.warn('Failed to load question statistics.', error)
+      return { total: 0, choice: 0, judge: 0 }
+    }),
   ])
   assertSuccess(pageResult.error, 'query question table')
 
@@ -109,28 +112,9 @@ async function deleteQuestion(id) {
   return { source: 'database' }
 }
 
-async function fetchStats(ownerKey = '') {
-  const [totalResult, choiceResult, judgeResult] = await Promise.all([
-    createCountQuery(ownerKey),
-    createCountQuery(ownerKey, 'CHOICE'),
-    createCountQuery(ownerKey, 'JUDGE'),
-  ])
-  assertSuccess(totalResult.error, 'count questions')
-  assertSuccess(choiceResult.error, 'count choice questions')
-  assertSuccess(judgeResult.error, 'count judge questions')
-
-  return {
-    total: Number(totalResult.count || 0),
-    choice: Number(choiceResult.count || 0),
-    judge: Number(judgeResult.count || 0),
-  }
-}
-
-function createCountQuery(ownerKey, type) {
-  let query = getQuestionTable().select('id', { count: 'exact', head: true })
-  if (ownerKey) query = query.eq('owner_key', ownerKey)
-  if (type) query = query.eq('type', type)
-  return query
+async function fetchStats(ownerOnly) {
+  const result = await writeQuestion('stats', { ownerOnly: Boolean(ownerOnly) })
+  return result.stats || { total: 0, choice: 0, judge: 0 }
 }
 
 function mapQuestion(row) {

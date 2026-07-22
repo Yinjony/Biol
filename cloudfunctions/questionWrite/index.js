@@ -8,17 +8,26 @@ const app = cloudbase.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const models = app.models
 
 const CREATE_QUESTION_SQL = [
-  'INSERT INTO `Question` (`id`, `type`, `content`, `options`, `answer`, `createdAt`, `updatedAt`, `_openid`, `owner_key`)',
+  'INSERT INTO `question` (`id`, `type`, `content`, `options`, `answer`, `createdAt`, `updatedAt`, `_openid`, `owner_key`)',
   'VALUES ({{id}}, {{type}}, {{content}}, {{optionsJson}}, {{answer}}, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6), {{openid}}, {{ownerKey}})',
 ].join(' ')
 
 const UPDATE_QUESTION_SQL = [
-  'UPDATE `Question`',
+  'UPDATE `question`',
   'SET `type` = {{type}}, `content` = {{content}}, `options` = {{optionsJson}}, `answer` = {{answer}}, `updatedAt` = CURRENT_TIMESTAMP(6)',
   'WHERE `id` = {{id}} AND `owner_key` = {{ownerKey}}',
 ].join(' ')
 
-const DELETE_QUESTION_SQL = 'DELETE FROM `Question` WHERE `id` = {{id}} AND `owner_key` = {{ownerKey}}'
+const DELETE_QUESTION_SQL = 'DELETE FROM `question` WHERE `id` = {{id}} AND `owner_key` = {{ownerKey}}'
+
+const ALL_QUESTION_STATS_SQL = [
+  'SELECT COUNT(*) AS `total`,',
+  "SUM(CASE WHEN `type` = 'CHOICE' THEN 1 ELSE 0 END) AS `choice`,",
+  "SUM(CASE WHEN `type` = 'JUDGE' THEN 1 ELSE 0 END) AS `judge`",
+  'FROM `question`',
+].join(' ')
+
+const MY_QUESTION_STATS_SQL = `${ALL_QUESTION_STATS_SQL} WHERE \`owner_key\` = {{ownerKey}}`
 
 exports.main = async (event) => {
   try {
@@ -30,6 +39,12 @@ exports.main = async (event) => {
     }
 
     const ownerKey = createOwnerKey(openid)
+    if (action === 'stats') {
+      const sql = event.ownerOnly ? MY_QUESTION_STATS_SQL : ALL_QUESTION_STATS_SQL
+      const result = await models.$runSQL(sql, event.ownerOnly ? { ownerKey } : {})
+      return { ok: true, stats: extractStats(result) }
+    }
+
     if (action === 'create') {
       const question = normalizeQuestion(event.payload)
       const id = createUuid()
@@ -118,6 +133,17 @@ function normalizeChoiceOptions(value) {
 function assertAffected(result, message) {
   const affected = Number(result && result.data && result.data.total || 0)
   if (affected === 0) throw new Error(message)
+}
+
+function extractStats(result) {
+  const data = result && result.data || {}
+  const rows = data.executeResultList || data.data || []
+  const row = Array.isArray(rows) ? rows[0] : rows
+  return {
+    total: Number(row && row.total || 0),
+    choice: Number(row && row.choice || 0),
+    judge: Number(row && row.judge || 0),
+  }
 }
 
 function requireId(value) {

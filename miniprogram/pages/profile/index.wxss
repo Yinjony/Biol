@@ -101,15 +101,25 @@
   border: 0;
   background: transparent;
   z-index: 2;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  line-height: normal;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .profile-avatar-button::after {
   border: 0;
+  display: none;
 }
 
 .profile-avatar {
   width: 160rpx;
   height: 160rpx;
   border-radius: 50%;
+  display: block;
 }
 
 /* --- 核心修改：新的 Placeholder 样式 --- */
@@ -121,7 +131,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
   z-index: 1;
 }
 
@@ -133,6 +142,37 @@
   text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
 }
 /* 提示文字样式微调 */
+/* Reuse the visual language of the custom tab bar's profile icon. */
+.profile-avatar-icon {
+  position: relative;
+  width: 82rpx;
+  height: 82rpx;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.profile-avatar-icon::before,
+.profile-avatar-icon::after {
+  position: absolute;
+  right: 50%;
+  transform: translateX(50%);
+  background: currentColor;
+  content: '';
+}
+
+.profile-avatar-icon::before {
+  top: 4rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+}
+
+.profile-avatar-icon::after {
+  bottom: 4rpx;
+  width: 62rpx;
+  height: 36rpx;
+  border-radius: 34rpx 34rpx 18rpx 18rpx;
+}
+
 .profile-avatar-hint {
   color: #999999; /* 浅灰色 */
   font-size: 26rpx;

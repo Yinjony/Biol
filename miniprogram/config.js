@@ -17,7 +17,7 @@ const config = {
   // envId: 'test-f0b102',
 
   // Question data is stored exclusively in CloudBase RDB.
-  rdbQuestionTable: 'Question',
+  rdbQuestionTable: 'question',
   rdbProfileTable: 'user_profile',
 
   // 云开发-存储 示例文件的文件 ID

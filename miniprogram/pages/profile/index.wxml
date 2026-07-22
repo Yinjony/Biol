@@ -11,12 +11,11 @@
 
   <view class="section card profile-card">
     <view class="profile-avatar-block">
-      <!-- 新增外层边框容器 -->
       <view class="avatar-border-wrapper">
         <button class="profile-avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
           <image wx:if="{{avatarDisplayUrl}}" class="profile-avatar" src="{{avatarDisplayUrl}}" mode="aspectFill" />
           <view wx:else class="profile-avatar-placeholder">
-            <text class="avatar-initial">{{avatarText || '夏'}}</text>
+            <view class="profile-avatar-icon"></view>
           </view>
         </button>
       </view>
