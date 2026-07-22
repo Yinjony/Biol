@@ -11,19 +11,16 @@
 
   <view class="section card profile-card">
     <view class="profile-avatar-block">
-      <!-- WXML -->
-      <view class="avatar-wrapper">
+      <!-- 新增外层边框容器 -->
+      <view class="avatar-border-wrapper">
         <button class="profile-avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
           <image wx:if="{{avatarDisplayUrl}}" class="profile-avatar" src="{{avatarDisplayUrl}}" mode="aspectFill" />
           <view wx:else class="profile-avatar-placeholder">
-            <view class="avatar-icon">
-              <view class="avatar-icon-head"></view>
-              <view class="avatar-icon-body"></view>
-            </view>
+            <text class="avatar-initial">{{avatarText || '夏'}}</text>
           </view>
         </button>
       </view>
-      <text class="profile-avatar-hint">点击使用微信头像</text>
+      <text class="profile-avatar-hint">点击更换头像</text>
     </view>
 
     <view class="field profile-name-field">
